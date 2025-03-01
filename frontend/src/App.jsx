@@ -3,6 +3,8 @@ import Navbar from "./components/Navbar";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Dashboard from "./components/Dashboard";
+import CreateCourse from "./components/CreateCourse";
+import CourseList from "./components/CourseList"; // Import the CourseList component
 
 const Home = () => <div className="text-center mt-10 text-xl">Welcome to MyApp!</div>;
 
@@ -16,6 +18,8 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/create-course" element={<CreateCourse />} />
+          <Route path="/courses" element={<CourseList />} /> {/* Add the /courses route */}
         </Routes>
       </div>
     </Router>

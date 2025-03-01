@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const [userData, setUserData] = useState({});
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -44,9 +46,18 @@ const Dashboard = () => {
           <strong>Is Active:</strong> {userData.is_active ? "Yes" : "No"}
         </p>
         <p>
-          <strong>Date Joined:</strong> {new Date(userData.date_joined).toLocaleString()}
+          <strong>Date Joined:</strong>{" "}
+          {new Date(userData.date_joined).toLocaleString()}
         </p>
       </div>
+
+      {/* Create Course Button */}
+      <button
+        onClick={() => navigate("/create-course")}
+        className="mt-6 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300"
+      >
+        Create Course
+      </button>
     </div>
   );
 };

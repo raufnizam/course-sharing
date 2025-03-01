@@ -21,6 +21,12 @@ const Navbar = () => {
               >
                 Dashboard
               </Link>
+              <Link
+                to="/courses"
+                className="hover:text-gray-300 transition-colors duration-200"
+              >
+                Courses
+              </Link>
               <button
                 onClick={() => {
                   localStorage.removeItem("access_token");
