@@ -1,26 +1,27 @@
 from rest_framework import viewsets, permissions
-from .models import Course
-from .serializers import CourseSerializer
+from .models import Course, Lesson, Video, PDF
+from .serializers import CourseSerializer, LessonSerializer, VideoSerializer, PDFSerializer
 
 class CourseViewSet(viewsets.ModelViewSet):
-    queryset = Course.objects.all()
+    queryset = Course.objects.prefetch_related("lessons").all()  # Prefetch lessons
     serializer_class = CourseSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        # Set the instructor to the currently logged-in user
         serializer.save(instructor=self.request.user)
 
-    def perform_update(self, serializer):
-        # Ensure only the instructor can update the course
-        if serializer.instance.instructor == self.request.user:
-            serializer.save()
-        else:
-            raise serializers.ValidationError("You are not the instructor of this course.")
 
-    def perform_destroy(self, instance):
-        # Ensure only the instructor can delete the course
-        if instance.instructor == self.request.user:
-            instance.delete()
-        else:
-            raise serializers.ValidationError("You are not the instructor of this course.")
+class LessonViewSet(viewsets.ModelViewSet):
+    queryset = Lesson.objects.all()
+    serializer_class = LessonSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class VideoViewSet(viewsets.ModelViewSet):
+    queryset = Video.objects.all()
+    serializer_class = VideoSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class PDFViewSet(viewsets.ModelViewSet):
+    queryset = PDF.objects.all()
+    serializer_class = PDFSerializer
+    permission_classes = [permissions.IsAuthenticated]
