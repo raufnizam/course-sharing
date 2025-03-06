@@ -1,5 +1,11 @@
 from rest_framework import serializers
-from .models import Course, Lesson
+from .models import Course, Lesson, Category
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'description']
 
 class LessonSerializer(serializers.ModelSerializer):
     video_file_name = serializers.SerializerMethodField()
@@ -32,9 +38,10 @@ class LessonSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 class CourseSerializer(serializers.ModelSerializer):
-    lessons = LessonSerializer(many=True, read_only=True)  # Include lessons in response
+    lessons = LessonSerializer(many=True, read_only=True)  
+    category = CategorySerializer(read_only=True)  
 
     class Meta:
         model = Course
-        fields = ['id', 'title', 'description', 'instructor', 'created_at', 'updated_at', 'lessons']
+        fields = ['id', 'title', 'description', 'instructor', 'category', 'created_at', 'updated_at', 'lessons']
         read_only_fields = ['instructor', 'created_at', 'updated_at']

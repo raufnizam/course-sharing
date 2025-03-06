@@ -12,6 +12,9 @@ import { ToastContainer } from "react-toastify";
 import LessonDetail from "./components/LessonDetail";
 import LessonEdit from "./components/LessonEdit";
 import EditCourse from "./components/EditCourse";
+import CategoryList from "./components/CategoryList";
+import CreateCategory from "./components/CreateCategory";
+import EditCategory from "./components/EditCategory";
 
 
 const App = () => {
@@ -31,7 +34,10 @@ const App = () => {
           <Route path="/courses/:id/edit" element={<EditCourse />} />
           <Route path="/lessons/:id" element={<LessonDetail />} />
           <Route path="/lessons/edit/:id" element={<LessonEdit />} />
-          <Route path="/courses/:id/add-lesson" element={<AddLesson />} /> {/* Add the AddLesson route */}
+          <Route path="/courses/:id/add-lesson" element={<AddLesson />} /> 
+          <Route path="/categories" element={<CategoryList />} />
+        <Route path="/create-category" element={<CreateCategory />} />
+        <Route path="/edit-category/:id" element={<EditCategory />} />
         </Routes>
       </div>
     </Router>

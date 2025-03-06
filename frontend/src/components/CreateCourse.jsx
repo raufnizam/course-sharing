@@ -1,12 +1,33 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const CreateCourse = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState([]); // State to store categories
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
+
+  // Fetch categories from the backend
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        const response = await axios.get("http://127.0.0.1:8000/api/categories/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setCategories(response.data);
+      } catch (error) {
+        setMessage("Error fetching categories. Please try again.");
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleCreateCourse = async (e) => {
     e.preventDefault();
@@ -19,7 +40,7 @@ const CreateCourse = () => {
       const token = localStorage.getItem("access_token");
       const response = await axios.post(
         "http://127.0.0.1:8000/api/courses/",
-        { title, description },
+        { title, description, category }, // Include category in the request
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -63,6 +84,22 @@ const CreateCourse = () => {
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
             required
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Category</label>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            required
+          >
+            <option value="">Select a category</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
         </div>
         <button
           type="submit"

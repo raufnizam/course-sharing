@@ -116,6 +116,15 @@ const AddLesson = () => {
           />
         </div>
 
+
+        <button
+            type="button"
+            onClick={() => navigate(`/courses/${id}`)}
+            className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+          >
+            Back
+          </button>
+
         {/* Submit Button */}
         <button
           type="submit"

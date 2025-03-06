@@ -29,6 +29,7 @@ const Navbar = () => {
   const authenticatedLinks = [
     { name: "Dashboard", path: "/dashboard" },
     { name: "Courses", path: "/courses" },
+    { name: "Categories", path: "/categories" },
     { name: "Questions", path: "/questions" },
     { name: "Coaches", path: "/coaches" },
   ];
