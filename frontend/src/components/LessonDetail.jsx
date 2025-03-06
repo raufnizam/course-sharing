@@ -18,11 +18,7 @@ const LessonDetail = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-        // Ensure videos and pdfs are initialized as arrays
-        const data = response.data;
-        data.videos = data.videos || [];
-        data.pdfs = data.pdfs || [];
-        setLesson(data);
+        setLesson(response.data);
       } catch (error) {
         setMessage("Error fetching lesson details. Please try again.");
       }
@@ -55,40 +51,41 @@ const LessonDetail = () => {
         <p><strong>Title:</strong> {lesson.title}</p>
         <p><strong>Description:</strong> {lesson.description}</p>
         <p><strong>Order:</strong> {lesson.order}</p>
+        <p><strong>Related Course:</strong> {lesson.course?.title || "No course assigned"}</p>
       </div>
 
-      {/* Videos in Lesson */}
-      {lesson.videos.length > 0 && (
-        <div className="mt-6">
-          <h2 className="text-xl font-bold mb-4">Videos</h2>
-          {lesson.videos.map((video) => (
-            <div key={video.id} className="mt-4 border p-4 rounded-lg shadow-sm">
-              <p className="font-medium">{video.title}</p>
-              <video controls className="w-full mt-2">
-                <source src={video.video_file} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-              <p className="text-gray-600">{video.description}</p>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Video Section */}
+      <div className="mt-6">
+        <h2 className="text-xl font-bold mb-4">Video</h2>
+        {lesson.video_file ? (
+          <div className="mt-4 border p-4 rounded-lg shadow-sm">
+            <p className="font-medium">{lesson.video_title || "Untitled Video"}</p>
+            <video controls className="w-full mt-2">
+              <source src={lesson.video_file} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+            <p className="text-gray-600">{lesson.video_description || "No description available."}</p>
+          </div>
+        ) : (
+          <p>No video available for this lesson.</p>
+        )}
+      </div>
 
-      {/* PDFs in Lesson */}
-      {lesson.pdfs.length > 0 && (
-        <div className="mt-6">
-          <h2 className="text-xl font-bold mb-4">PDFs</h2>
-          {lesson.pdfs.map((pdf) => (
-            <div key={pdf.id} className="mt-4 border p-4 rounded-lg shadow-sm">
-              <p className="font-medium">{pdf.title}</p>
-              <a href={pdf.pdf_file} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">
-                View PDF
-              </a>
-              <p className="text-gray-600">{pdf.description}</p>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* PDF Section */}
+      <div className="mt-6">
+        <h2 className="text-xl font-bold mb-4">PDF</h2>
+        {lesson.pdf_file ? (
+          <div className="mt-4 border p-4 rounded-lg shadow-sm">
+            <p className="font-medium">{lesson.pdf_title || "Untitled PDF"}</p>
+            <a href={lesson.pdf_file} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">
+              View PDF
+            </a>
+            <p className="text-gray-600">{lesson.pdf_description || "No description available."}</p>
+          </div>
+        ) : (
+          <p>No PDF available for this lesson.</p>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 from rest_framework import viewsets, permissions
-from .models import Course, Lesson, Video, PDF
-from .serializers import CourseSerializer, LessonSerializer, VideoSerializer, PDFSerializer
+from .models import Course, Lesson
+from .serializers import CourseSerializer, LessonSerializer
 
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.prefetch_related("lessons").all()  # Prefetch lessons
@@ -16,12 +16,3 @@ class LessonViewSet(viewsets.ModelViewSet):
     serializer_class = LessonSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-class VideoViewSet(viewsets.ModelViewSet):
-    queryset = Video.objects.all()
-    serializer_class = VideoSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-class PDFViewSet(viewsets.ModelViewSet):
-    queryset = PDF.objects.all()
-    serializer_class = PDFSerializer
-    permission_classes = [permissions.IsAuthenticated]

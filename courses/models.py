@@ -17,23 +17,9 @@ class Lesson(models.Model):
     description = models.TextField()
     order = models.PositiveIntegerField()  # To order lessons within a course
 
-    def __str__(self):
-        return self.title
-
-class Video(models.Model):
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='videos')
-    title = models.CharField(max_length=255)
+    # Video and PDF fields
     video_file = models.FileField(upload_to='videos/', blank=True, null=True)  # Optional
-    description = models.TextField(blank=True, null=True)
-
-    def __str__(self):
-        return self.title
-
-class PDF(models.Model):
-    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='pdfs')
-    title = models.CharField(max_length=255)
     pdf_file = models.FileField(upload_to='pdfs/', blank=True, null=True)  # Optional
-    description = models.TextField(blank=True, null=True)
-
+    
     def __str__(self):
         return self.title
