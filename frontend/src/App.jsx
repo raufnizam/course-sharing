@@ -7,12 +7,14 @@ import CreateCourse from "./components/CreateCourse";
 import CourseList from "./components/CourseList";
 import CourseDetail from "./components/CourseDetail";
 import AddLesson from "./components/AddLesson"; // Import the AddLesson component
+import Home from "./pages/Home";
+import { ToastContainer } from "react-toastify";
 
-const Home = () => <div className="text-center mt-10 text-xl">Welcome to MyApp!</div>;
 
 const App = () => {
   return (
     <Router>
+      <ToastContainer position="top-right" autoClose={3000} />
       <Navbar />
       <div className="container mx-auto px-4 py-6">
         <Routes>

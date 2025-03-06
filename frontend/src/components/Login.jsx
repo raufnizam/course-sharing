@@ -1,5 +1,7 @@
 import  { useState } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -19,9 +21,12 @@ const Login = () => {
       const response = await axios.post("http://127.0.0.1:8000/auth/login/", formData);
       localStorage.setItem("access_token", response.data.access);
       localStorage.setItem("refresh_token", response.data.refresh);
-      setMessage("Login successful!");
+      toast.success("Login successful");
+      window.location.href = "/dashboard";
     } catch (error) {
-      setMessage("Error during login: " + error.response.data.error);
+      // setMessage("Error during login: " + error.response.data.error);
+      toast.error("Error during login: " + error.response
+      ? error.response.data.error : error.message);
     }
   };
 
