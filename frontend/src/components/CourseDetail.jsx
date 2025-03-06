@@ -78,7 +78,11 @@ const CourseDetail = () => {
         ) : (
           <div className="space-y-6">
             {course.lessons.map((lesson) => (
-              <div key={lesson.id} className="border p-4 rounded-lg shadow-sm">
+              <div
+                key={lesson.id}
+                className="border p-4 rounded-lg shadow-sm cursor-pointer hover:bg-gray-50"
+                onClick={() => navigate(`/lessons/${lesson.id}`)} // Add this onClick handler
+              >
                 <h3 className="text-lg font-semibold">{lesson.title}</h3>
                 <p className="text-gray-600">{lesson.description}</p>
 
