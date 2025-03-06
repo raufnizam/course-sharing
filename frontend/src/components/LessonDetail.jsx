@@ -27,6 +27,26 @@ const LessonDetail = () => {
     fetchLesson();
   }, [id]);
 
+  // Delete lesson function
+  const handleDelete = async () => {
+    const confirmDelete = window.confirm("Are you sure you want to delete this lesson?");
+    if (!confirmDelete) return;
+
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.delete(`http://127.0.0.1:8000/api/lessons/${id}/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setMessage("Lesson deleted successfully.");
+      setTimeout(() => navigate("/"), 2000); // Redirect after 2 seconds
+    } catch (error) {
+      setMessage("Error deleting lesson. Please try again.");
+    }
+  };
+
   if (!lesson) return <div>Loading...</div>;
 
   return (
@@ -44,6 +64,22 @@ const LessonDetail = () => {
         className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 mb-4"
       >
         Back
+      </button>
+
+      {/* Edit Button */}
+      <button
+        onClick={() => navigate(`/lessons/edit/${id}`)} // Navigate to edit page
+        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 mb-4 ml-2"
+      >
+        Edit
+      </button>
+
+      {/* Delete Button */}
+      <button
+        onClick={handleDelete}
+        className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 mb-4 ml-2"
+      >
+        Delete
       </button>
 
       {/* Lesson Information */}

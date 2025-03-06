@@ -2,15 +2,26 @@ from rest_framework import serializers
 from .models import Course, Lesson
 
 class LessonSerializer(serializers.ModelSerializer):
+    video_file_name = serializers.SerializerMethodField()
+    pdf_file_name = serializers.SerializerMethodField()
+
     class Meta:
         model = Lesson
         fields = [
             'id', 'title', 'description', 'order', 'course',
-            'video_file', 'pdf_file',
+            'video_file', 'video_file_name', 'pdf_file', 'pdf_file_name',
         ]
         extra_kwargs = {
             'order': {'required': False},  # Make the order field optional
         }
+
+    def get_video_file_name(self, obj):
+        """Return the filename of the uploaded video."""
+        return obj.video_file.name.split('/')[-1] if obj.video_file else None
+
+    def get_pdf_file_name(self, obj):
+        """Return the filename of the uploaded PDF."""
+        return obj.pdf_file.name.split('/')[-1] if obj.pdf_file else None
 
     def create(self, validated_data):
         # Automatically set the order if not provided

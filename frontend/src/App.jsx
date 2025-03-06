@@ -10,6 +10,7 @@ import AddLesson from "./components/AddLesson"; // Import the AddLesson componen
 import Home from "./pages/Home";
 import { ToastContainer } from "react-toastify";
 import LessonDetail from "./components/LessonDetail";
+import LessonEdit from "./components/LessonEdit";
 
 
 const App = () => {
@@ -27,6 +28,7 @@ const App = () => {
           <Route path="/courses" element={<CourseList />} />
           <Route path="/courses/:id" element={<CourseDetail />} />
           <Route path="/lessons/:id" element={<LessonDetail />} />
+          <Route path="/lessons/edit/:id" element={<LessonEdit />} />
           <Route path="/courses/:id/add-lesson" element={<AddLesson />} /> {/* Add the AddLesson route */}
         </Routes>
       </div>
