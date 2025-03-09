@@ -6,18 +6,15 @@ const EditCourse = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [course, setCourse] = useState({ title: "", description: "", category: "" });
-  const [categories, setCategories] = useState([]); // State to store categories
+  const [categories, setCategories] = useState([]);
   const [message, setMessage] = useState("");
 
-  // Fetch categories from the backend
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const token = localStorage.getItem("access_token");
         const response = await axios.get("http://127.0.0.1:8000/api/categories/", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
         setCategories(response.data);
       } catch (error) {
@@ -28,17 +25,18 @@ const EditCourse = () => {
     fetchCategories();
   }, []);
 
-  // Fetch course details
   useEffect(() => {
     const fetchCourse = async () => {
       try {
         const token = localStorage.getItem("access_token");
         const response = await axios.get(`http://127.0.0.1:8000/api/courses/${id}/`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
-        setCourse(response.data);
+        setCourse({
+          title: response.data.title || "",
+          description: response.data.description || "",
+          category: response.data.category ? response.data.category.id : "",  // Ensure category is set as ID
+        });
       } catch (error) {
         setMessage("Error fetching course details. Please try again.");
       }
@@ -47,26 +45,34 @@ const EditCourse = () => {
     fetchCourse();
   }, [id]);
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("access_token");
-      await axios.put(`http://127.0.0.1:8000/api/courses/${id}/`, course, {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      await axios.put(
+        `http://127.0.0.1:8000/api/courses/${id}/`,
+        {
+          ...course,
+          category: parseInt(course.category),  // Ensure category is sent as an ID (number)
         },
-      });
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setMessage("Course updated successfully!");
-      setTimeout(() => navigate(`/courses/${id}`), 1000); // Redirect to course detail page
+      setTimeout(() => navigate(`/courses/${id}`), 1000);
     } catch (error) {
-      setMessage("Error updating course. Please try again.");
+      const errorMsg = error.response?.data?.detail || "Error updating course. Please try again.";
+      setMessage(errorMsg);
     }
   };
 
-  // Handle input changes
   const handleChange = (e) => {
-    setCourse({ ...course, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setCourse((prevCourse) => ({
+      ...prevCourse,
+      [name]: name === "category" ? parseInt(value) : value,  // Ensure category is parsed as an integer
+    }));
   };
 
   return (
@@ -109,6 +115,7 @@ const EditCourse = () => {
             value={course.category || ""}
             onChange={handleChange}
             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
+            required
           >
             <option value="">Select a category</option>
             {categories.map((cat) => (

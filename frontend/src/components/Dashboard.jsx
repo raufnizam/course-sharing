@@ -40,6 +40,9 @@ const Dashboard = () => {
           <strong>Email:</strong> {userData.email}
         </p>
         <p>
+          <strong>Role:</strong> {userData.role} {/* Display role */}
+        </p>
+        <p>
           <strong>Is Staff:</strong> {userData.is_staff ? "Yes" : "No"}
         </p>
         <p>
@@ -51,13 +54,15 @@ const Dashboard = () => {
         </p>
       </div>
 
-      {/* Create Course Button */}
-      <button
-        onClick={() => navigate("/create-course")}
-        className="mt-6 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300"
-      >
-        Create Course
-      </button>
+      {/* Conditionally render the "Create Course" button for instructors */}
+      {userData.role === "instructor" && (
+        <button
+          onClick={() => navigate("/create-course")}
+          className="mt-6 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300"
+        >
+          Create Course
+        </button>
+      )}
     </div>
   );
 };

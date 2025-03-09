@@ -6,6 +6,7 @@ const Register = () => {
     username: "",
     email: "",
     password: "",
+    role: "student", // Default role
   });
   const [message, setMessage] = useState("");
 
@@ -29,7 +30,6 @@ const Register = () => {
       }
     }
   };
-  
 
   return (
     <div className="max-w-md mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
@@ -67,6 +67,19 @@ const Register = () => {
             className="w-full px-3 py-2 border rounded-lg"
             required
           />
+        </div>
+        <div className="mb-4">
+          <label className="block text-gray-700">Role</label>
+          <select
+            name="role"
+            value={formData.role}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border rounded-lg"
+            required
+          >
+            <option value="student">Student</option>
+            <option value="instructor">Instructor</option>
+          </select>
         </div>
         <button
           type="submit"

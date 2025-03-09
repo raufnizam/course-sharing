@@ -31,8 +31,8 @@ const CreateCourse = () => {
 
   const handleCreateCourse = async (e) => {
     e.preventDefault();
-    if (!title.trim() || !description.trim()) {
-      setMessage("Title and description cannot be empty.");
+    if (!title.trim() || !description.trim() || !category) {
+      setMessage("Title, description, and category cannot be empty.");
       return;
     }
 
@@ -40,7 +40,7 @@ const CreateCourse = () => {
       const token = localStorage.getItem("access_token");
       const response = await axios.post(
         "http://127.0.0.1:8000/api/courses/",
-        { title, description, category }, // Include category in the request
+        { title, description, category: parseInt(category) }, // Ensure category is sent as an ID (number)
         {
           headers: {
             Authorization: `Bearer ${token}`,

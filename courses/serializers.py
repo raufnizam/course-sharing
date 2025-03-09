@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import Course, Lesson, Category
 
-
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
@@ -39,7 +38,8 @@ class LessonSerializer(serializers.ModelSerializer):
 
 class CourseSerializer(serializers.ModelSerializer):
     lessons = LessonSerializer(many=True, read_only=True)  
-    category = CategorySerializer(read_only=True)  
+    instructor = serializers.StringRelatedField()  # Use StringRelatedField for instructor
+    category = serializers.StringRelatedField()  # Use StringRelatedField for category
 
     class Meta:
         model = Course

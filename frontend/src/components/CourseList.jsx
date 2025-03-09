@@ -4,46 +4,43 @@ import { Link, useNavigate } from "react-router-dom";
 
 const CourseList = () => {
   const [courses, setCourses] = useState([]);
-  const [categories, setCategories] = useState([]); // State to store categories
-  const [selectedCategory, setSelectedCategory] = useState(""); // State for selected category
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);  // Added loading state
   const navigate = useNavigate();
 
-  // Fetch categories from the backend
+  // Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const token = localStorage.getItem("access_token");
         const response = await axios.get("http://127.0.0.1:8000/api/categories/", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
         setCategories(response.data);
       } catch (error) {
         setMessage("Error fetching categories. Please try again.");
       }
     };
-
     fetchCategories();
   }, []);
 
-  // Fetch courses from the backend
+  // Fetch courses
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         const token = localStorage.getItem("access_token");
         const response = await axios.get("http://127.0.0.1:8000/api/courses/", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
         setCourses(response.data);
       } catch (error) {
         setMessage("Error fetching courses. Please try again.");
+      } finally {
+        setLoading(false);  // Stop loading when data is fetched
       }
     };
-
     fetchCourses();
   }, []);
 
@@ -55,6 +52,9 @@ const CourseList = () => {
   return (
     <div className="max-w-4xl mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
       <h1 className="text-2xl font-bold mb-6">Course List</h1>
+
+      {/* Display Loading or Message */}
+      {loading && <div className="text-blue-500 mb-4">Loading courses...</div>}
       {message && <div className="text-red-500 mb-4">{message}</div>}
 
       {/* Category Filter Dropdown */}
@@ -83,25 +83,29 @@ const CourseList = () => {
       </button>
 
       {/* List of Courses */}
-      <div className="space-y-4">
-        {filteredCourses.map((course) => (
-          <div key={course.id} className="border p-4 rounded-lg shadow-sm">
-            <h2 className="text-xl font-semibold">{course.title}</h2>
-            <p className="text-gray-600">{course.description}</p>
-            <p className="text-sm text-gray-500">
-              Instructor: {course.instructor.username}
-            </p>
-            <p className="text-sm text-gray-500">
-              Category: {course.category?.name || "Uncategorized"}
-            </p>
-            <Link
-              to={`/courses/${course.id}`}
-              className="text-blue-500 hover:text-blue-700"
-            >
-              View Details
-            </Link>
-          </div>
-        ))}
+      <div className="space-y-4 mt-4">
+        {filteredCourses.length > 0 ? (
+          filteredCourses.map((course) => (
+            <div key={course.id} className="border p-4 rounded-lg shadow-sm">
+              <h2 className="text-xl font-semibold">{course.title}</h2>
+              <p className="text-gray-600">{course.description}</p>
+              <p className="text-sm text-gray-500">
+                Instructor: {course.instructor || "Unknown Instructor"}
+              </p>
+              <p className="text-sm text-gray-500">
+                Category: {course.category ? course.category : "Uncategorized"}
+              </p>
+              <Link
+                to={`/courses/${course.id}`}
+                className="text-blue-500 hover:text-blue-700"
+              >
+                View Details
+              </Link>
+            </div>
+          ))
+        ) : (
+          <div className="text-center text-gray-500">No courses found.</div>
+        )}
       </div>
     </div>
   );

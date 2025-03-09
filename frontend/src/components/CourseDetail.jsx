@@ -25,6 +25,7 @@ const CourseDetail = () => {
                     lesson.videos = lesson.videos || [];
                     lesson.pdfs = lesson.pdfs || [];
                 });
+                console.log("Course API Response:", data); // Debugging
                 setCourse(data);
             } catch (error) {
                 setMessage("Error fetching course details. Please try again.");
@@ -73,7 +74,8 @@ const CourseDetail = () => {
             <div className="space-y-4">
                 <p><strong>Title:</strong> {course.title}</p>
                 <p><strong>Description:</strong> {course.description}</p>
-                <p><strong>Instructor:</strong> {course.instructor.username}</p>
+                <p><strong>Instructor:</strong> {course.instructor}</p>
+                <p><strong>Category:</strong> {course.category || "Uncategorized"}</p>
                 <p><strong>Created At:</strong> {new Date(course.created_at).toLocaleString()}</p>
                 <p><strong>Updated At:</strong> {new Date(course.updated_at).toLocaleString()}</p>
             </div>
