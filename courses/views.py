@@ -13,15 +13,18 @@ class CourseViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        serializer.save(instructor=self.request.user)
+        # Ensure category is provided in the request data
+        category_id = self.request.data.get('category')
+        category = Category.objects.get(id=category_id) if category_id else None
+        serializer.save(instructor=self.request.user, category=category)
 
     def perform_update(self, serializer):
-        serializer.save()  # Ensure this is saving the updated data
-
-
+        # Ensure category is updated if provided in the request data
+        category_id = self.request.data.get('category')
+        category = Category.objects.get(id=category_id) if category_id else serializer.instance.category
+        serializer.save(category=category)
 
 class LessonViewSet(viewsets.ModelViewSet):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
     permission_classes = [permissions.IsAuthenticated]
-
