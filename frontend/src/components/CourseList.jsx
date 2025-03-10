@@ -7,8 +7,25 @@ const CourseList = () => {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(true);  // Added loading state
+  const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState(""); // Track user role
   const navigate = useNavigate();
+
+  // Fetch user role and data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        const response = await axios.get("http://127.0.0.1:8000/auth/profile/", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUserRole(response.data.role); // Set user role
+      } catch (error) {
+        setMessage("Error fetching user data. Please log in again.");
+      }
+    };
+    fetchUserData();
+  }, []);
 
   // Fetch categories
   useEffect(() => {
@@ -38,11 +55,33 @@ const CourseList = () => {
       } catch (error) {
         setMessage("Error fetching courses. Please try again.");
       } finally {
-        setLoading(false);  // Stop loading when data is fetched
+        setLoading(false); // Stop loading when data is fetched
       }
     };
     fetchCourses();
   }, []);
+
+  // Handle course enrollment
+  const handleEnroll = async (courseId) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.post(
+        `http://127.0.0.1:8000/api/enroll-course/${courseId}/`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setMessage("Successfully enrolled in the course.");
+      // Refresh the course list
+      const response = await axios.get("http://127.0.0.1:8000/api/courses/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCourses(response.data);
+    } catch (error) {
+      setMessage("Error enrolling in the course. Please try again.");
+    }
+  };
 
   // Filter courses by selected category
   const filteredCourses = selectedCategory
@@ -74,13 +113,15 @@ const CourseList = () => {
         </select>
       </div>
 
-      {/* Create Course Button */}
-      <button
-        onClick={() => navigate("/create-course")}
-        className="mt-6 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300"
-      >
-        Create Course
-      </button>
+      {/* Create Course Button (Only for Instructors) */}
+      {userRole === "instructor" && (
+        <button
+          onClick={() => navigate("/create-course")}
+          className="mt-6 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition duration-300"
+        >
+          Create Course
+        </button>
+      )}
 
       {/* List of Courses */}
       <div className="space-y-4 mt-4">
@@ -95,12 +136,28 @@ const CourseList = () => {
               <p className="text-sm text-gray-500">
                 Category: {course.category ? course.category : "Uncategorized"}
               </p>
-              <Link
-                to={`/courses/${course.id}`}
-                className="text-blue-500 hover:text-blue-700"
-              >
-                View Details
-              </Link>
+              <div className="flex items-center justify-between mt-2">
+                <Link
+                  to={`/courses/${course.id}`}
+                  className="text-blue-500 hover:text-blue-700"
+                >
+                  View Details
+                </Link>
+                {/* Enroll Button (Only for Students) */}
+                {userRole === "student" && (
+                  <button
+                    onClick={() => handleEnroll(course.id)}
+                    disabled={course.is_enrolled}
+                    className={`px-4 py-2 rounded-md ${
+                      course.is_enrolled
+                        ? "bg-gray-300 cursor-not-allowed"
+                        : "bg-green-500 hover:bg-green-600 text-white"
+                    }`}
+                  >
+                    {course.is_enrolled ? "Enrolled" : "Enroll"}
+                  </button>
+                )}
+              </div>
             </div>
           ))
         ) : (

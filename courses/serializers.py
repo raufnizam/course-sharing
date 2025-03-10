@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Course, Lesson, Category
+from .models import Course, Lesson, Category, CourseEnrollment
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -36,12 +36,29 @@ class LessonSerializer(serializers.ModelSerializer):
             validated_data['order'] = (last_lesson.order + 1) if last_lesson else 1
         return super().create(validated_data)
 
+class CourseEnrollmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CourseEnrollment
+        fields = ['id', 'student', 'course', 'enrolled_at']
+        read_only_fields = ['student', 'enrolled_at']
+
 class CourseSerializer(serializers.ModelSerializer):
     lessons = LessonSerializer(many=True, read_only=True)  
     instructor = serializers.StringRelatedField()  # Use StringRelatedField for instructor
     category = serializers.StringRelatedField()  # Use StringRelatedField for category
+    is_enrolled = serializers.SerializerMethodField()  # Add a field to check if the current user is enrolled
 
     class Meta:
         model = Course
-        fields = ['id', 'title', 'description', 'instructor', 'category', 'created_at', 'updated_at', 'lessons']
+        fields = [
+            'id', 'title', 'description', 'instructor', 'category', 
+            'created_at', 'updated_at', 'lessons', 'is_enrolled',
+        ]
         read_only_fields = ['instructor', 'created_at', 'updated_at']
+
+    def get_is_enrolled(self, obj):
+        """Check if the current user is enrolled in the course."""
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return CourseEnrollment.objects.filter(student=request.user, course=obj).exists()
+        return False

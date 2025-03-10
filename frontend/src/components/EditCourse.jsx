@@ -17,6 +17,7 @@ const EditCourse = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCategories(response.data);
+        console.log("Categories:", response.data); // Debug the categories
       } catch (error) {
         setMessage("Error fetching categories. Please try again.");
       }
@@ -32,11 +33,19 @@ const EditCourse = () => {
         const response = await axios.get(`http://127.0.0.1:8000/api/courses/${id}/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
+
+        console.log("API Response:", response.data); // Debug the API response
+
+        // Ensure the category is set as the ID
+        const categoryId = response.data.category ? response.data.category.id : "";
+
         setCourse({
           title: response.data.title || "",
           description: response.data.description || "",
-          category: response.data.category ? response.data.category.id : "",  // Ensure category is set as ID
+          category: categoryId, // Set category as the ID
         });
+
+        console.log("Course State:", { title: response.data.title, category: categoryId }); // Debug the course state
       } catch (error) {
         setMessage("Error fetching course details. Please try again.");
       }
@@ -53,7 +62,7 @@ const EditCourse = () => {
         `http://127.0.0.1:8000/api/courses/${id}/`,
         {
           ...course,
-          category: parseInt(course.category),  // Ensure category is sent as an ID (number)
+          category: parseInt(course.category), // Ensure category is sent as an ID (number)
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -71,7 +80,7 @@ const EditCourse = () => {
     const { name, value } = e.target;
     setCourse((prevCourse) => ({
       ...prevCourse,
-      [name]: name === "category" ? parseInt(value) : value,  // Ensure category is parsed as an integer
+      [name]: name === "category" ? parseInt(value) : value, // Parse category as an integer
     }));
   };
 
@@ -119,7 +128,7 @@ const EditCourse = () => {
           >
             <option value="">Select a category</option>
             {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
+              <option key={cat.id} value={cat.id}> {/* Use cat.id as the value */}
                 {cat.name}
               </option>
             ))}

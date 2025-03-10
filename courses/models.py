@@ -31,3 +31,15 @@ class Lesson(models.Model):
     
     def __str__(self):
         return self.title
+
+# Add a new model for course enrollment
+class CourseEnrollment(models.Model):
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='enrolled_courses')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='enrolled_students')
+    enrolled_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('student', 'course')  # Ensure a student can't enroll in the same course twice
+
+    def __str__(self):
+        return f"{self.student.username} enrolled in {self.course.title}"
