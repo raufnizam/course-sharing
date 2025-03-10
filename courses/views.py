@@ -2,8 +2,18 @@ from rest_framework import viewsets, permissions
 from .models import Course, Lesson, Category
 from .serializers import CourseSerializer, LessonSerializer, CategorySerializer
 from .permissions import IsInstructorOrReadOnly
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_courses(request):
+    user = request.user
+    courses = Course.objects.filter(instructor=user)
+    serializer = CourseSerializer(courses, many=True)
+    return Response(serializer.data)
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()

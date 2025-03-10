@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const [userData, setUserData] = useState({});
+  const [courses, setCourses] = useState([]);
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
@@ -11,12 +12,28 @@ const Dashboard = () => {
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        const response = await axios.get("http://127.0.0.1:8000/auth/profile/", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          "http://127.0.0.1:8000/auth/profile/",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         setUserData(response.data);
+
+        // Fetch user courses if the user is an instructor
+        if (response.data.role === "instructor") {
+          const coursesResponse = await axios.get(
+            "http://127.0.0.1:8000/api/user-courses/",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          setCourses(coursesResponse.data);
+        }
       } catch (error) {
         setMessage("Error fetching user data. Please log in again.");
       }
@@ -62,6 +79,30 @@ const Dashboard = () => {
         >
           Create Course
         </button>
+      )}
+
+      {/* Display user courses if any */}
+      {userData.role === "instructor" && courses.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-xl font-bold mb-4">Your Courses</h2>
+          <ul className="space-y-2">
+            {courses.map((course) => (
+              <li key={course.id} className="border p-4 rounded-md">
+                <h3 className="font-semibold">{course.title}</h3>
+                <p>{course.description}</p>
+                <p className="text-sm text-gray-500">
+                Category: {course.category ? course.category : "Uncategorized"}
+              </p>
+                <Link
+                  to={`/courses/${course.id}`}
+                  className="text-blue-500 hover:text-blue-700"
+                >
+                  View Details
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );
