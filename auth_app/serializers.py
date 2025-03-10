@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import make_password
 from .models import Profile
 
 class UserSerializer(serializers.ModelSerializer):
-    role = serializers.CharField(write_only=True)  # Add role field
+    role = serializers.CharField(write_only=True, required=True)  # Make role required
 
     class Meta:
         model = User

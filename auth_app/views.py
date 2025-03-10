@@ -7,13 +7,20 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import UserSerializer
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 @api_view(['POST'])
 def register_user(request):
+    logger.info("Registration request data: %s", request.data)  # Log request data
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    logger.error("Registration errors: %s", serializer.errors)  # Log validation errors
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 # views.py
 @api_view(['GET'])

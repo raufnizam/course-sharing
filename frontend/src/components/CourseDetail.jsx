@@ -3,29 +3,33 @@ import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 
 const CourseDetail = () => {
-    const { id } = useParams(); // Get the course ID from the URL
-    const navigate = useNavigate(); // For navigation
+    const { id } = useParams();
+    const navigate = useNavigate();
     const [course, setCourse] = useState(null);
     const [message, setMessage] = useState("");
+    const [user, setUser] = useState(null);  // Track logged-in user
 
-    // Fetch course details
     useEffect(() => {
         const fetchCourse = async () => {
             try {
                 const token = localStorage.getItem("access_token");
-                const response = await axios.get(`http://127.0.0.1:8000/api/courses/${id}/`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+                const userResponse = await axios.get(`http://127.0.0.1:8000/auth/profile/`, {
+                    headers: { Authorization: `Bearer ${token}` }
                 });
-                // Ensure lessons, videos, and pdfs are initialized as arrays
-                const data = response.data;
+
+                setUser(userResponse.data); // Save logged-in user data
+
+                const courseResponse = await axios.get(`http://127.0.0.1:8000/api/courses/${id}/`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                const data = courseResponse.data;
                 data.lessons = data.lessons || [];
                 data.lessons.forEach((lesson) => {
                     lesson.videos = lesson.videos || [];
                     lesson.pdfs = lesson.pdfs || [];
                 });
-                console.log("Course API Response:", data); // Debugging
+
                 setCourse(data);
             } catch (error) {
                 setMessage("Error fetching course details. Please try again.");
@@ -35,23 +39,22 @@ const CourseDetail = () => {
         fetchCourse();
     }, [id]);
 
-    // Handle course deletion
     const handleDeleteCourse = async () => {
         try {
             const token = localStorage.getItem("access_token");
             await axios.delete(`http://127.0.0.1:8000/api/courses/${id}/`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                headers: { Authorization: `Bearer ${token}` }
             });
             setMessage("Course deleted successfully!");
-            setTimeout(() => navigate("/courses"), 1000); // Redirect to course list page
+            setTimeout(() => navigate("/courses"), 1000);
         } catch (error) {
             setMessage("Error deleting course. Please try again.");
         }
     };
 
     if (!course) return <div>Loading...</div>;
+
+    const isInstructor = user && course.instructor === user.username; // Authorization check
 
     return (
         <div className="max-w-2xl mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
@@ -62,7 +65,6 @@ const CourseDetail = () => {
                 </div>
             )}
 
-            {/* Back Button */}
             <button
                 onClick={() => navigate("/courses")}
                 className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600 mb-4"
@@ -70,7 +72,6 @@ const CourseDetail = () => {
                 Back to Course List
             </button>
 
-            {/* Course Information */}
             <div className="space-y-4">
                 <p><strong>Title:</strong> {course.title}</p>
                 <p><strong>Description:</strong> {course.description}</p>
@@ -80,35 +81,35 @@ const CourseDetail = () => {
                 <p><strong>Updated At:</strong> {new Date(course.updated_at).toLocaleString()}</p>
             </div>
 
-            {/* Add Lesson Button */}
-            <button
-                onClick={() => navigate(`/courses/${id}/add-lesson`)}
-                className="mt-6 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-            >
-                Add Lesson
-            </button>
+            {isInstructor && (
+                <>
+                    <button
+                        onClick={() => navigate(`/courses/${id}/add-lesson`)}
+                        className="mt-6 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                    >
+                        Add Lesson
+                    </button>
 
-            {/* Edit Course Button */}
-            <button
-                onClick={() => navigate(`/courses/${id}/edit`)}
-                className="mt-6 bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 ml-4"
-            >
-                Edit Course
-            </button>
+                    <button
+                        onClick={() => navigate(`/courses/${id}/edit`)}
+                        className="mt-6 bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 ml-4"
+                    >
+                        Edit Course
+                    </button>
 
-            {/* Delete Course Button */}
-            <button
-                onClick={() => {
-                    if (window.confirm("Are you sure you want to delete this course?")) {
-                        handleDeleteCourse();
-                    }
-                }}
-                className="mt-6 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 ml-4"
-            >
-                Delete Course
-            </button>
+                    <button
+                        onClick={() => {
+                            if (window.confirm("Are you sure you want to delete this course?")) {
+                                handleDeleteCourse();
+                            }
+                        }}
+                        className="mt-6 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 ml-4"
+                    >
+                        Delete Course
+                    </button>
+                </>
+            )}
 
-            {/* List of Lessons (with Videos and PDFs) */}
             <div className="mt-6">
                 <h2 className="text-xl font-bold mb-4">Lessons</h2>
                 {course.lessons.length === 0 ? (
@@ -119,12 +120,11 @@ const CourseDetail = () => {
                             <div
                                 key={lesson.id}
                                 className="border p-4 rounded-lg shadow-sm cursor-pointer hover:bg-gray-50"
-                                onClick={() => navigate(`/lessons/${lesson.id}`)} // Add this onClick handler
+                                onClick={() => navigate(`/lessons/${lesson.id}`)}
                             >
                                 <h3 className="text-lg font-semibold">{lesson.title}</h3>
                                 <p className="text-gray-600">{lesson.description}</p>
 
-                                {/* Videos in Lesson */}
                                 {lesson.videos.length > 0 && (
                                     <div className="mt-4">
                                         <h4 className="font-semibold">Videos</h4>
@@ -140,14 +140,18 @@ const CourseDetail = () => {
                                     </div>
                                 )}
 
-                                {/* PDFs in Lesson */}
                                 {lesson.pdfs.length > 0 && (
                                     <div className="mt-4">
                                         <h4 className="font-semibold">PDFs</h4>
                                         {lesson.pdfs.map((pdf) => (
                                             <div key={pdf.id} className="mt-2">
                                                 <p className="font-medium">{pdf.title}</p>
-                                                <a href={pdf.pdf_file} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700">
+                                                <a
+                                                    href={pdf.pdf_file}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-blue-500 hover:text-blue-700"
+                                                >
                                                     View PDF
                                                 </a>
                                             </div>

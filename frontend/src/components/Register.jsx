@@ -23,9 +23,22 @@ const Register = () => {
     } catch (error) {
       if (error.response) {
         // Server responded with an error
-        setMessage("Error during registration: " + error.response.data);
+        const errorData = error.response.data;
+
+        // Check if the error data is an object (e.g., validation errors)
+        if (typeof errorData === "object" && errorData !== null) {
+          // Convert the error object to a readable string
+          const errorMessages = Object.values(errorData).flat().join(", ");
+          setMessage("Error during registration: " + errorMessages);
+        } else {
+          // If the error data is a string or other type
+          setMessage("Error during registration: " + errorData);
+        }
+      } else if (error.request) {
+        // The request was made but no response was received
+        setMessage("Error: No response from the server.");
       } else {
-        // Network or other errors
+        // Something happened in setting up the request
         setMessage("Error: Unable to connect to the server.");
       }
     }
@@ -88,7 +101,15 @@ const Register = () => {
           Register
         </button>
       </form>
-      {message && <p className="mt-4 text-center">{message}</p>}
+      {message && (
+        <p
+          className={`mt-4 text-center ${
+            message.includes("Error") ? "text-red-500" : "text-green-500"
+          }`}
+        >
+          {message}
+        </p>
+      )}
     </div>
   );
 };
