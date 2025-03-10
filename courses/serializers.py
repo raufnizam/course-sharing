@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Course, Lesson, Category, CourseEnrollment
+from .models import Course, Lesson, Category, CourseEnrollment, CourseEnrollmentRequest
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -62,3 +62,13 @@ class CourseSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return CourseEnrollment.objects.filter(student=request.user, course=obj).exists()
         return False
+    
+    
+    
+class CourseEnrollmentRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CourseEnrollmentRequest
+        fields = ['id', 'student', 'course', 'message', 'status', 'requested_at']
+        read_only_fields = ['student', 'status', 'requested_at']
+    
+    

@@ -11,45 +11,43 @@ const CourseDetail = () => {
   const [message, setMessage] = useState("");
   const [user, setUser] = useState(null);
   const [isEnrolled, setIsEnrolled] = useState(false);
+  const [enrollmentRequestStatus, setEnrollmentRequestStatus] = useState(null);
+  const [requestMessage, setRequestMessage] = useState("");
 
   useEffect(() => {
     const fetchCourse = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        const userResponse = await axios.get(
-          `http://127.0.0.1:8000/auth/profile/`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
+        const userResponse = await axios.get(`http://127.0.0.1:8000/auth/profile/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+    
         setUser(userResponse.data);
-
-        const courseResponse = await axios.get(
-          `http://127.0.0.1:8000/api/courses/${id}/`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
+    
+        const courseResponse = await axios.get(`http://127.0.0.1:8000/api/courses/${id}/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+    
         const data = courseResponse.data;
         data.lessons = data.lessons || [];
         data.lessons.forEach((lesson) => {
           lesson.videos = lesson.videos || [];
           lesson.pdfs = lesson.pdfs || [];
         });
-
+    
         setCourse(data);
-
-        // Check if the student is enrolled
+    
         if (userResponse.data.role === "student") {
-          const enrollmentResponse = await axios.get(
-            `http://127.0.0.1:8000/api/check-enrollment/${id}/`, // Use the new endpoint
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
-          setIsEnrolled(enrollmentResponse.data.is_enrolled); // Update enrollment status
+          const enrollmentResponse = await axios.get(`http://127.0.0.1:8000/api/check-enrollment/${id}/`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setIsEnrolled(enrollmentResponse.data.is_enrolled);
+    
+          // Check enrollment request status using the new endpoint
+          const requestResponse = await axios.get(`http://127.0.0.1:8000/api/check-enrollment-request/${id}/`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setEnrollmentRequestStatus(requestResponse.data.status);
         }
       } catch (error) {
         setMessage("Error fetching course details. Please try again.");
@@ -59,34 +57,27 @@ const CourseDetail = () => {
     fetchCourse();
   }, [id]);
 
-  const handleEnroll = async () => {
+  const handleRequestEnrollment = async () => {
     try {
       const token = localStorage.getItem("access_token");
-      const response = await axios.post(
-        `http://127.0.0.1:8000/api/enroll-course/${id}/`,
-        {}, // Empty body for POST request
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setMessage("Successfully enrolled in the course.");
-      setIsEnrolled(true); // Update enrollment status
+      await axios.post(`http://127.0.0.1:8000/api/request-enrollment/${id}/`, { message: requestMessage }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setMessage("Enrollment request submitted successfully.");
+      setEnrollmentRequestStatus("pending");
     } catch (error) {
-      setMessage("Error enrolling in the course. Please try again.");
+      setMessage("Error submitting enrollment request. Please try again.");
     }
   };
 
   const handleWithdraw = async () => {
     try {
       const token = localStorage.getItem("access_token");
-      await axios.delete(
-        `http://127.0.0.1:8000/api/withdraw-course/${id}/`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      await axios.delete(`http://127.0.0.1:8000/api/withdraw-course/${id}/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setMessage("Successfully withdrawn from the course.");
-      setIsEnrolled(false); // Update enrollment status
+      setIsEnrolled(false);
     } catch (error) {
       setMessage("Error withdrawing from the course. Please try again.");
     }
@@ -121,14 +112,17 @@ const CourseDetail = () => {
         <InstructorCourseDetail
           course={course}
           handleDeleteCourse={handleDeleteCourse}
-          user={user} // Pass the logged-in user
+          user={user}
         />
       ) : (
         <StudentCourseDetail
           course={course}
           isEnrolled={isEnrolled}
-          handleEnroll={handleEnroll}
-          handleWithdraw={handleWithdraw} // Pass the withdraw handler
+          enrollmentRequestStatus={enrollmentRequestStatus}
+          handleRequestEnrollment={handleRequestEnrollment}
+          handleWithdraw={handleWithdraw}
+          requestMessage={requestMessage}
+          setRequestMessage={setRequestMessage}
         />
       )}
     </>

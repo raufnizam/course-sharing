@@ -43,3 +43,19 @@ class CourseEnrollment(models.Model):
 
     def __str__(self):
         return f"{self.student.username} enrolled in {self.course.title}"
+    
+    
+
+class CourseEnrollmentRequest(models.Model):
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='enrollment_requests')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='enrollment_requests')
+    message = models.TextField(blank=True, null=True)  # Optional message from the student
+    status = models.CharField(max_length=10, choices=[('pending', 'Pending'), ('approved', 'Approved'), ('rejected', 'Rejected')], default='pending')
+    requested_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('student', 'course')  # Ensure a student can't request the same course twice
+
+    def __str__(self):
+        return f"{self.student.username} requested to enroll in {self.course.title}"    
+

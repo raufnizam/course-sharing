@@ -61,28 +61,6 @@ const CourseList = () => {
     fetchCourses();
   }, []);
 
-  // Handle course enrollment
-  const handleEnroll = async (courseId) => {
-    try {
-      const token = localStorage.getItem("access_token");
-      await axios.post(
-        `http://127.0.0.1:8000/api/enroll-course/${courseId}/`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setMessage("Successfully enrolled in the course.");
-      // Refresh the course list
-      const response = await axios.get("http://127.0.0.1:8000/api/courses/", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setCourses(response.data);
-    } catch (error) {
-      setMessage("Error enrolling in the course. Please try again.");
-    }
-  };
-
   // Filter courses by selected category
   const filteredCourses = selectedCategory
     ? courses.filter((course) => course.category?.id === parseInt(selectedCategory))
@@ -143,20 +121,6 @@ const CourseList = () => {
                 >
                   View Details
                 </Link>
-                {/* Enroll Button (Only for Students) */}
-                {userRole === "student" && (
-                  <button
-                    onClick={() => handleEnroll(course.id)}
-                    disabled={course.is_enrolled}
-                    className={`px-4 py-2 rounded-md ${
-                      course.is_enrolled
-                        ? "bg-gray-300 cursor-not-allowed"
-                        : "bg-green-500 hover:bg-green-600 text-white"
-                    }`}
-                  >
-                    {course.is_enrolled ? "Enrolled" : "Enroll"}
-                  </button>
-                )}
               </div>
             </div>
           ))

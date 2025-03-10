@@ -6,6 +6,8 @@ const Dashboard = () => {
   const [userData, setUserData] = useState({});
   const [courses, setCourses] = useState([]); // Courses the user is enrolled in or created
   const [allCourses, setAllCourses] = useState([]); // All available courses
+  const [enrollmentRequests, setEnrollmentRequests] = useState([]); // Enrollment requests for instructors
+  const [studentRequests, setStudentRequests] = useState([]); // Enrollment requests for students
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
@@ -35,6 +37,17 @@ const Dashboard = () => {
             }
           );
           setCourses(coursesResponse.data);
+
+          // Fetch enrollment requests for the instructor's courses
+          const requestsResponse = await axios.get(
+            "http://127.0.0.1:8000/api/list-enrollment-requests/",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          setEnrollmentRequests(requestsResponse.data);
         } else if (response.data.role === "student") {
           // Fetch courses the student is enrolled in
           const enrollmentsResponse = await axios.get(
@@ -46,6 +59,17 @@ const Dashboard = () => {
             }
           );
           setCourses(enrollmentsResponse.data);
+
+          // Fetch enrollment requests made by the student
+          const requestsResponse = await axios.get(
+            "http://127.0.0.1:8000/api/student-enrollment-requests/",
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          setStudentRequests(requestsResponse.data);
 
           // If no courses are enrolled, fetch all courses
           if (enrollmentsResponse.data.length === 0) {
@@ -67,6 +91,62 @@ const Dashboard = () => {
 
     fetchUserData();
   }, []);
+
+  const handleApproveRequest = async (requestId) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.post(
+        `http://127.0.0.1:8000/api/approve-enrollment/${requestId}/`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setMessage("Enrollment request approved successfully.");
+      // Refresh the enrollment requests list
+      const requestsResponse = await axios.get(
+        "http://127.0.0.1:8000/api/list-enrollment-requests/",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setEnrollmentRequests(requestsResponse.data);
+    } catch (error) {
+      setMessage("Error approving enrollment request. Please try again.");
+    }
+  };
+
+  const handleRejectRequest = async (requestId) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.post(
+        `http://127.0.0.1:8000/api/reject-enrollment/${requestId}/`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setMessage("Enrollment request rejected successfully.");
+      // Refresh the enrollment requests list
+      const requestsResponse = await axios.get(
+        "http://127.0.0.1:8000/api/list-enrollment-requests/",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setEnrollmentRequests(requestsResponse.data);
+    } catch (error) {
+      setMessage("Error rejecting enrollment request. Please try again.");
+    }
+  };
 
   if (message) {
     return <div className="text-center mt-10 text-red-500">{message}</div>;
@@ -166,6 +246,55 @@ const Dashboard = () => {
           >
             View All Courses
           </button>
+        </div>
+      )}
+
+      {/* Display enrollment requests for instructors */}
+      {userData.role === "instructor" && enrollmentRequests.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-xl font-bold mb-4">Enrollment Requests</h2>
+          <ul className="space-y-2">
+            {enrollmentRequests.map((request) => (
+              <li key={request.id} className="border p-4 rounded-md">
+                <h3 className="font-semibold">{request.course.title}</h3>
+                <p>Requested by: {request.student.username}</p>
+                <p>Message: {request.message || "No message provided."}</p>
+                <p>Status: {request.status}</p>
+                {request.status === "pending" && (
+                  <div className="mt-2">
+                    <button
+                      onClick={() => handleApproveRequest(request.id)}
+                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 mr-2"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handleRejectRequest(request.id)}
+                      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Display enrollment requests for students */}
+      {userData.role === "student" && studentRequests.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-xl font-bold mb-4">Your Enrollment Requests</h2>
+          <ul className="space-y-2">
+            {studentRequests.map((request) => (
+              <li key={request.id} className="border p-4 rounded-md">
+                <h3 className="font-semibold">{request.course.title}</h3>
+                <p>Status: {request.status}</p>
+                <p>Message: {request.message || "No message provided."}</p>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

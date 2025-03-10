@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-const StudentCourseDetail = ({ course, isEnrolled, handleEnroll, handleWithdraw }) => {
+const StudentCourseDetail = ({ course, isEnrolled, handleRequestEnrollment, handleWithdraw, requestMessage, setRequestMessage }) => {
   const navigate = useNavigate();
 
   return (
@@ -29,12 +29,20 @@ const StudentCourseDetail = ({ course, isEnrolled, handleEnroll, handleWithdraw 
       </div>
 
       {!isEnrolled ? (
-        <button
-          onClick={handleEnroll}
-          className="mt-6 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-        >
-          Enroll in Course
-        </button>
+        <div className="mt-6">
+          <textarea
+            value={requestMessage}
+            onChange={(e) => setRequestMessage(e.target.value)}
+            placeholder="Optional message for enrollment request"
+            className="w-full p-2 border rounded-md mb-4"
+          />
+          <button
+            onClick={handleRequestEnrollment}
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+          >
+            Request Enrollment
+          </button>
+        </div>
       ) : (
         <button
           onClick={handleWithdraw}
