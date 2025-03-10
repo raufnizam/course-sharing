@@ -61,20 +61,36 @@ const CourseDetail = () => {
 
   const handleEnroll = async () => {
     try {
-        const token = localStorage.getItem("access_token");
-        const response = await axios.post(
-            `http://127.0.0.1:8000/api/enroll-course/${id}/`,
-            {}, // Empty body for POST request
-            {
-                headers: { Authorization: `Bearer ${token}` },
-            }
-        );
-        setMessage("Successfully enrolled in the course.");
-        setIsEnrolled(true); // Update enrollment status
+      const token = localStorage.getItem("access_token");
+      const response = await axios.post(
+        `http://127.0.0.1:8000/api/enroll-course/${id}/`,
+        {}, // Empty body for POST request
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setMessage("Successfully enrolled in the course.");
+      setIsEnrolled(true); // Update enrollment status
     } catch (error) {
-        setMessage("Error enrolling in the course. Please try again.");
+      setMessage("Error enrolling in the course. Please try again.");
     }
-};
+  };
+
+  const handleWithdraw = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.delete(
+        `http://127.0.0.1:8000/api/withdraw-course/${id}/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setMessage("Successfully withdrawn from the course.");
+      setIsEnrolled(false); // Update enrollment status
+    } catch (error) {
+      setMessage("Error withdrawing from the course. Please try again.");
+    }
+  };
 
   const handleDeleteCourse = async () => {
     try {
@@ -95,27 +111,28 @@ const CourseDetail = () => {
 
   return (
     <>
-        {message && (
-            <div className={`mb-4 ${message.includes("Error") ? "text-red-500" : "text-green-500"}`}>
-                {message}
-            </div>
-        )}
+      {message && (
+        <div className={`mb-4 ${message.includes("Error") ? "text-red-500" : "text-green-500"}`}>
+          {message}
+        </div>
+      )}
 
-        {isInstructor ? (
-            <InstructorCourseDetail
-                course={course}
-                handleDeleteCourse={handleDeleteCourse}
-                user={user} // Pass the logged-in user
-            />
-        ) : (
-            <StudentCourseDetail
-                course={course}
-                isEnrolled={isEnrolled}
-                handleEnroll={handleEnroll}
-            />
-        )}
+      {isInstructor ? (
+        <InstructorCourseDetail
+          course={course}
+          handleDeleteCourse={handleDeleteCourse}
+          user={user} // Pass the logged-in user
+        />
+      ) : (
+        <StudentCourseDetail
+          course={course}
+          isEnrolled={isEnrolled}
+          handleEnroll={handleEnroll}
+          handleWithdraw={handleWithdraw} // Pass the withdraw handler
+        />
+      )}
     </>
-);
+  );
 };
 
 export default CourseDetail;

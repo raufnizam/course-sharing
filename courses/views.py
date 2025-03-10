@@ -2,6 +2,7 @@ from rest_framework import viewsets, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework import status
 from .models import Course, Lesson, Category, CourseEnrollment
 from auth_app.models import Profile
 from .serializers import CourseSerializer, LessonSerializer, CategorySerializer, CourseEnrollmentSerializer
@@ -70,6 +71,17 @@ def enroll_course(request, course_id):
     except Profile.DoesNotExist:
         return Response({"error": "User profile not found."}, status=404)
     
+    
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def withdraw_course(request, course_id):
+    user = request.user
+    try:
+        enrollment = CourseEnrollment.objects.get(student=user, course_id=course_id)
+        enrollment.delete()
+        return Response({"message": "Successfully withdrawn from the course."}, status=status.HTTP_200_OK)
+    except CourseEnrollment.DoesNotExist:
+        return Response({"error": "You are not enrolled in this course."}, status=status.HTTP_404_NOT_FOUND)
     
     
 

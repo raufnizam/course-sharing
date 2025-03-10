@@ -4,7 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const [userData, setUserData] = useState({});
-  const [courses, setCourses] = useState([]);
+  const [courses, setCourses] = useState([]); // Courses the user is enrolled in or created
+  const [allCourses, setAllCourses] = useState([]); // All available courses
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
@@ -22,8 +23,9 @@ const Dashboard = () => {
         );
         setUserData(response.data);
 
-        // Fetch user courses if the user is an instructor
+        // Fetch user courses based on role
         if (response.data.role === "instructor") {
+          // Fetch courses created by the instructor
           const coursesResponse = await axios.get(
             "http://127.0.0.1:8000/api/user-courses/",
             {
@@ -33,6 +35,30 @@ const Dashboard = () => {
             }
           );
           setCourses(coursesResponse.data);
+        } else if (response.data.role === "student") {
+          // Fetch courses the student is enrolled in
+          const enrollmentsResponse = await axios.get(
+            "http://127.0.0.1:8000/api/user-courses/", // Endpoint to fetch enrolled courses
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          setCourses(enrollmentsResponse.data);
+
+          // If no courses are enrolled, fetch all courses
+          if (enrollmentsResponse.data.length === 0) {
+            const allCoursesResponse = await axios.get(
+              "http://127.0.0.1:8000/api/courses/", // Endpoint to fetch all courses
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+            setAllCourses(allCoursesResponse.data);
+          }
         }
       } catch (error) {
         setMessage("Error fetching user data. Please log in again.");
@@ -91,8 +117,8 @@ const Dashboard = () => {
                 <h3 className="font-semibold">{course.title}</h3>
                 <p>{course.description}</p>
                 <p className="text-sm text-gray-500">
-                Category: {course.category ? course.category : "Uncategorized"}
-              </p>
+                  Category: {course.category ? course.category : "Uncategorized"}
+                </p>
                 <Link
                   to={`/courses/${course.id}`}
                   className="text-blue-500 hover:text-blue-700"
@@ -102,6 +128,44 @@ const Dashboard = () => {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* Display enrolled courses for students */}
+      {userData.role === "student" && courses.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-xl font-bold mb-4">Your Enrolled Courses</h2>
+          <ul className="space-y-2">
+            {courses.map((course) => (
+              <li key={course.id} className="border p-4 rounded-md">
+                <h3 className="font-semibold">{course.title}</h3>
+                <p>{course.description}</p>
+                <p className="text-sm text-gray-500">
+                  Category: {course.category ? course.category : "Uncategorized"}
+                </p>
+                <Link
+                  to={`/courses/${course.id}`}
+                  className="text-blue-500 hover:text-blue-700"
+                >
+                  View Details
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Display "View All Courses" button if no courses are enrolled */}
+      {userData.role === "student" && courses.length === 0 && (
+        <div className="mt-6">
+          <h2 className="text-xl font-bold mb-4">No Enrolled Courses</h2>
+          <p className="mb-4">You are not enrolled in any courses yet.</p>
+          <button
+            onClick={() => navigate("/courses")} // Redirect to the course list page
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+          >
+            View All Courses
+          </button>
         </div>
       )}
     </div>
