@@ -111,7 +111,7 @@ class LessonViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     
     
-    
+    # Enrolment
     
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -125,7 +125,7 @@ from .serializers import CourseEnrollmentRequestSerializer
 def request_enrollment(request, course_id):
     user = request.user
     try:
-        profile = user.profile  # Access the profile
+        profile = user.profile
         if profile.role == "instructor":
             return Response({"error": "Instructors cannot request enrollment."}, status=403)
 
@@ -135,10 +135,18 @@ def request_enrollment(request, course_id):
             return Response({"error": "Course not found."}, status=404)
 
         # Check if the user has already requested enrollment
-        if CourseEnrollmentRequest.objects.filter(student=user, course=course).exists():
-            return Response({"error": "You have already requested enrollment in this course."}, status=400)
+        existing_request = CourseEnrollmentRequest.objects.filter(student=user, course=course).first()
+        if existing_request:
+            if existing_request.status == "pending":
+                return Response({"error": "You have already requested enrollment in this course."}, status=400)
+            elif existing_request.status == "rejected":
+                # Update the existing request
+                existing_request.message = request.data.get('message', '')
+                existing_request.status = "pending"
+                existing_request.save()
+                return Response({"message": "Enrollment request re-submitted successfully."}, status=200)
 
-        # Create the enrollment request
+        # Create a new enrollment request
         enrollment_request = CourseEnrollmentRequest(
             student=user,
             course=course,
@@ -148,6 +156,9 @@ def request_enrollment(request, course_id):
         return Response({"message": "Enrollment request submitted successfully."}, status=201)
     except Profile.DoesNotExist:
         return Response({"error": "User profile not found."}, status=404)
+    
+    
+    
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -191,6 +202,8 @@ def reject_enrollment(request, request_id):
         return Response({"message": "Enrollment request rejected successfully."}, status=200)
     except CourseEnrollmentRequest.DoesNotExist:
         return Response({"error": "Enrollment request not found."}, status=404)
+    
+    
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -249,6 +262,21 @@ def check_enrollment_request(request, course_id):
             return Response({"status": "no_request"}, status=200)
     except Profile.DoesNotExist:
         return Response({"error": "User profile not found."}, status=404)
+    
+    
+    
+    
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def withdraw_enrollment_request(request, request_id):
+    try:
+        enrollment_request = CourseEnrollmentRequest.objects.get(id=request_id, student=request.user)
+        if enrollment_request.status != "pending":
+            return Response({"error": "Only pending requests can be withdrawn."}, status=400)
+        enrollment_request.delete()
+        return Response({"message": "Enrollment request withdrawn successfully."}, status=200)
+    except CourseEnrollmentRequest.DoesNotExist:
+        return Response({"error": "Enrollment request not found."}, status=404)
     
     
     

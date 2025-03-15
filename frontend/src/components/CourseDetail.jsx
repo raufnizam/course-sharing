@@ -21,29 +21,29 @@ const CourseDetail = () => {
         const userResponse = await axios.get(`http://127.0.0.1:8000/auth/profile/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-    
+
         setUser(userResponse.data);
-    
+
         const courseResponse = await axios.get(`http://127.0.0.1:8000/api/courses/${id}/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-    
+
         const data = courseResponse.data;
         data.lessons = data.lessons || [];
         data.lessons.forEach((lesson) => {
           lesson.videos = lesson.videos || [];
           lesson.pdfs = lesson.pdfs || [];
         });
-    
+
         setCourse(data);
-    
+
         if (userResponse.data.role === "student") {
           const enrollmentResponse = await axios.get(`http://127.0.0.1:8000/api/check-enrollment/${id}/`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           setIsEnrolled(enrollmentResponse.data.is_enrolled);
-    
-          // Check enrollment request status using the new endpoint
+
+          // Check enrollment request status
           const requestResponse = await axios.get(`http://127.0.0.1:8000/api/check-enrollment-request/${id}/`, {
             headers: { Authorization: `Bearer ${token}` },
           });
@@ -60,13 +60,19 @@ const CourseDetail = () => {
   const handleRequestEnrollment = async () => {
     try {
       const token = localStorage.getItem("access_token");
-      await axios.post(`http://127.0.0.1:8000/api/request-enrollment/${id}/`, { message: requestMessage }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const payload = { message: requestMessage || "" }; // Ensure message is not undefined
+      await axios.post(
+        `http://127.0.0.1:8000/api/request-enrollment/${id}/`,
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setMessage("Enrollment request submitted successfully.");
       setEnrollmentRequestStatus("pending");
     } catch (error) {
       setMessage("Error submitting enrollment request. Please try again.");
+      console.error("Error details:", error.response?.data); // Log the error details
     }
   };
 

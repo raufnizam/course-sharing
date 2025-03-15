@@ -4,7 +4,7 @@ from .views import (
     CourseViewSet, LessonViewSet, CategoryViewSet,
     user_courses, enroll_course, check_enrollment, withdraw_course,
     reject_enrollment, list_enrollment_requests, approve_enrollment,
-    request_enrollment, student_enrollment_requests, check_enrollment_request  # Add the new view here
+    request_enrollment, student_enrollment_requests, check_enrollment_request, withdraw_enrollment_request
 )
 
 router = DefaultRouter()
@@ -24,4 +24,5 @@ urlpatterns = [
     path('list-enrollment-requests/', list_enrollment_requests, name='list-enrollment-requests'),
     path('student-enrollment-requests/', student_enrollment_requests, name='student-enrollment-requests'),
     path('check-enrollment-request/<int:course_id>/', check_enrollment_request, name='check-enrollment-request'),  # Add the new endpoint
+    path('withdraw-enrollment-request/<int:request_id>/', withdraw_enrollment_request, name='withdraw-enrollment-request'),
 ]

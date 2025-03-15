@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import CourseItem from "./CourseItem"; // Import the CourseItem component
 
 const CourseList = () => {
   const [courses, setCourses] = useState([]);
@@ -8,10 +9,10 @@ const CourseList = () => {
   const [selectedCategory, setSelectedCategory] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
-  const [userRole, setUserRole] = useState(""); // Track user role
+  const [userRole, setUserRole] = useState("");
   const navigate = useNavigate();
 
-  // Fetch user role and data
+  // Fetch user role
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -19,7 +20,7 @@ const CourseList = () => {
         const response = await axios.get("http://127.0.0.1:8000/auth/profile/", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setUserRole(response.data.role); // Set user role
+        setUserRole(response.data.role);
       } catch (error) {
         setMessage("Error fetching user data. Please log in again.");
       }
@@ -55,7 +56,7 @@ const CourseList = () => {
       } catch (error) {
         setMessage("Error fetching courses. Please try again.");
       } finally {
-        setLoading(false); // Stop loading when data is fetched
+        setLoading(false);
       }
     };
     fetchCourses();
@@ -105,24 +106,7 @@ const CourseList = () => {
       <div className="space-y-4 mt-4">
         {filteredCourses.length > 0 ? (
           filteredCourses.map((course) => (
-            <div key={course.id} className="border p-4 rounded-lg shadow-sm">
-              <h2 className="text-xl font-semibold">{course.title}</h2>
-              <p className="text-gray-600">{course.description}</p>
-              <p className="text-sm text-gray-500">
-                Instructor: {course.instructor || "Unknown Instructor"}
-              </p>
-              <p className="text-sm text-gray-500">
-                Category: {course.category ? course.category : "Uncategorized"}
-              </p>
-              <div className="flex items-center justify-between mt-2">
-                <Link
-                  to={`/courses/${course.id}`}
-                  className="text-blue-500 hover:text-blue-700"
-                >
-                  View Details
-                </Link>
-              </div>
-            </div>
+            <CourseItem key={course.id} course={course} />
           ))
         ) : (
           <div className="text-center text-gray-500">No courses found.</div>

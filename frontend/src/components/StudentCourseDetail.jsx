@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-const StudentCourseDetail = ({ course, isEnrolled, handleRequestEnrollment, handleWithdraw, requestMessage, setRequestMessage }) => {
+const StudentCourseDetail = ({ course, isEnrolled, enrollmentRequestStatus, handleRequestEnrollment, handleWithdraw, requestMessage, setRequestMessage }) => {
   const navigate = useNavigate();
 
   return (
@@ -28,8 +28,11 @@ const StudentCourseDetail = ({ course, isEnrolled, handleRequestEnrollment, hand
         )}
       </div>
 
-      {!isEnrolled ? (
+      {!isEnrolled && enrollmentRequestStatus !== "pending" && (
         <div className="mt-6">
+          {enrollmentRequestStatus === "rejected" && (
+            <p className="text-red-500 mb-4">Your previous enrollment request was rejected. You can re-apply below.</p>
+          )}
           <textarea
             value={requestMessage}
             onChange={(e) => setRequestMessage(e.target.value)}
@@ -40,10 +43,16 @@ const StudentCourseDetail = ({ course, isEnrolled, handleRequestEnrollment, hand
             onClick={handleRequestEnrollment}
             className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
           >
-            Request Enrollment
+            {enrollmentRequestStatus === "rejected" ? "Re-request Enrollment" : "Request Enrollment"}
           </button>
         </div>
-      ) : (
+      )}
+
+      {enrollmentRequestStatus === "pending" && (
+        <p className="mt-6 text-yellow-600">Your enrollment request is pending approval.</p>
+      )}
+
+      {isEnrolled && (
         <button
           onClick={handleWithdraw}
           className="mt-6 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
