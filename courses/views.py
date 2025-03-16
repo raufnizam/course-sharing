@@ -166,8 +166,11 @@ def approve_enrollment(request, request_id):
     user = request.user
     try:
         enrollment_request = CourseEnrollmentRequest.objects.get(id=request_id)
-        if enrollment_request.course.instructor != user:
-            return Response({"error": "You are not the instructor of this course."}, status=403)
+        profile = user.profile
+
+        # Allow admins to approve any request
+        if profile.role != "admin" and enrollment_request.course.instructor != user:
+            return Response({"error": "You are not authorized to approve this request."}, status=403)
 
         if enrollment_request.status != 'pending':
             return Response({"error": "This request has already been processed."}, status=400)
@@ -183,14 +186,19 @@ def approve_enrollment(request, request_id):
     except CourseEnrollmentRequest.DoesNotExist:
         return Response({"error": "Enrollment request not found."}, status=404)
 
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def reject_enrollment(request, request_id):
     user = request.user
     try:
         enrollment_request = CourseEnrollmentRequest.objects.get(id=request_id)
-        if enrollment_request.course.instructor != user:
-            return Response({"error": "You are not the instructor of this course."}, status=403)
+        profile = user.profile
+
+        # Allow admins to reject any request
+        if profile.role != "admin" and enrollment_request.course.instructor != user:
+            return Response({"error": "You are not authorized to reject this request."}, status=403)
 
         if enrollment_request.status != 'pending':
             return Response({"error": "This request has already been processed."}, status=400)
@@ -211,11 +219,15 @@ def list_enrollment_requests(request):
     user = request.user
     try:
         profile = user.profile  # Access the profile
-        if profile.role != "instructor":
-            return Response({"error": "Only instructors can view enrollment requests."}, status=403)
+        if profile.role not in ["instructor", "admin"]:  # Allow both instructors and admins
+            return Response({"error": "Only instructors and admins can view enrollment requests."}, status=403)
 
-        # Get all pending enrollment requests for courses taught by the instructor
-        enrollment_requests = CourseEnrollmentRequest.objects.filter(course__instructor=user, status='pending')
+        # Get all pending enrollment requests
+        if profile.role == "instructor":
+            enrollment_requests = CourseEnrollmentRequest.objects.filter(course__instructor=user, status='pending')
+        else:  # Admin can view all pending requests
+            enrollment_requests = CourseEnrollmentRequest.objects.filter(status='pending')
+
         serializer = CourseEnrollmentRequestSerializer(enrollment_requests, many=True)
         return Response(serializer.data)
     except Profile.DoesNotExist:
@@ -255,7 +267,14 @@ def check_enrollment_request(request, course_id):
             return Response({"error": "Course not found."}, status=404)
 
         # Check if the user has an enrollment request for this course
-        enrollment_request = CourseEnrollmentRequest.objects.filter(student=user, course=course).first()
+        if profile.role == "student":
+            enrollment_request = CourseEnrollmentRequest.objects.filter(student=user, course=course).first()
+        else:  # Admin can check requests for any student
+            student_id = request.query_params.get('student_id')
+            if not student_id:
+                return Response({"error": "Student ID is required for admin requests."}, status=400)
+            enrollment_request = CourseEnrollmentRequest.objects.filter(student_id=student_id, course=course).first()
+
         if enrollment_request:
             return Response({"status": enrollment_request.status}, status=200)
         else:
@@ -269,10 +288,18 @@ def check_enrollment_request(request, course_id):
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def withdraw_enrollment_request(request, request_id):
+    user = request.user
     try:
-        enrollment_request = CourseEnrollmentRequest.objects.get(id=request_id, student=request.user)
+        profile = user.profile
+        enrollment_request = CourseEnrollmentRequest.objects.get(id=request_id)
+
+        # Allow admins to withdraw any request
+        if profile.role != "admin" and enrollment_request.student != user:
+            return Response({"error": "You are not authorized to withdraw this request."}, status=403)
+
         if enrollment_request.status != "pending":
             return Response({"error": "Only pending requests can be withdrawn."}, status=400)
+
         enrollment_request.delete()
         return Response({"message": "Enrollment request withdrawn successfully."}, status=200)
     except CourseEnrollmentRequest.DoesNotExist:
