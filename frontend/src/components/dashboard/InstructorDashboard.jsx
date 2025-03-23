@@ -32,7 +32,7 @@ const InstructorDashboard = ({ courses, enrollmentRequests, handleApproveRequest
         <p className="text-gray-500 mb-8">No courses found.</p>
       )}
 
-      {console.log(enrollmentRequests)      }
+      {/* Display Enrollment Requests */}
       {enrollmentRequests.length > 0 ? (
         <div className="mb-8">
           <h3 className="text-xl font-bold mb-4">Enrollment Requests</h3>
@@ -41,8 +41,8 @@ const InstructorDashboard = ({ courses, enrollmentRequests, handleApproveRequest
               <EnrollmentRequestCard
                 key={request.id}
                 request={request}
-                onApprove={handleApproveRequest}
-                onReject={handleRejectRequest}
+                onApprove={() => handleApproveRequest(request.id)} // Pass request ID to approve
+                onReject={() => handleRejectRequest(request.id)} // Pass request ID to reject
               />
             ))}
           </ul>

@@ -4,18 +4,17 @@ import { useNavigate } from "react-router-dom";
 import InstructorDashboard from "./InstructorDashboard";
 import StudentDashboard from "./StudentDashboard";
 import AdminDashboard from "./AdminDashboard";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import useUserData from "./useUserData"; // Import custom hook
 
 const Dashboard = () => {
-  const { userData, loading, error } = useUserData(); // Use custom hook
+  const { userData, loading, error } = useUserData();
   const [courses, setCourses] = useState([]);
   const [allCourses, setAllCourses] = useState([]);
   const [enrollmentRequests, setEnrollmentRequests] = useState([]);
   const [studentRequests, setStudentRequests] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
-  const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -86,13 +85,86 @@ const Dashboard = () => {
         setAllUsers(usersResponse.data);
         setAllCourses(coursesResponse.data);
         setEnrollmentRequests(requestsResponse.data);
+  
+        // Debug: Log the fetched enrollment requests
+        console.log("Admin Enrollment Requests:", requestsResponse.data);
       }
     } catch (error) {
-      setMessage("Error fetching data. Please try again.");
+      toast.error("Error fetching data. Please try again.");
+      console.error("Error fetching data:", error);
     }
   };
 
-  console.log(userData);
+  const handleApproveRequest = async (requestId) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.post(
+        `http://127.0.0.1:8000/api/approve-enrollment/${requestId}/`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      toast.success("Enrollment request approved successfully.");
+      const response = await axios.get("http://127.0.0.1:8000/api/list-enrollment-requests/", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setEnrollmentRequests(response.data);
+    } catch (error) {
+      toast.error("Error approving enrollment request. Please try again.");
+      console.error("Error approving request:", error);
+    }
+  };
+
+  const handleRejectRequest = async (requestId) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.post(
+        `http://127.0.0.1:8000/api/reject-enrollment/${requestId}/`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      toast.success("Enrollment request rejected successfully.");
+      const response = await axios.get("http://127.0.0.1:8000/api/list-enrollment-requests/", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setEnrollmentRequests(response.data);
+    } catch (error) {
+      toast.error("Error rejecting enrollment request. Please try again.");
+      console.error("Error rejecting request:", error);
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      await axios.delete(`http://127.0.0.1:8000/auth/admin/users/${userId}/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      toast.success("User deleted successfully.");
+      const response = await axios.get("http://127.0.0.1:8000/auth/admin/users/", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setAllUsers(response.data);
+    } catch (error) {
+      toast.error("Error deleting user. Please try again.");
+      console.error("Error deleting user:", error);
+    }
+  };
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div className="text-center mt-10 text-red-500">{error}</div>;
@@ -122,6 +194,8 @@ const Dashboard = () => {
         <InstructorDashboard
           courses={courses}
           enrollmentRequests={enrollmentRequests}
+          handleApproveRequest={handleApproveRequest}
+          handleRejectRequest={handleRejectRequest}
         />
       )}
 
@@ -138,6 +212,9 @@ const Dashboard = () => {
           allUsers={allUsers}
           allCourses={allCourses}
           enrollmentRequests={enrollmentRequests}
+          handleApproveRequest={handleApproveRequest}
+          handleRejectRequest={handleRejectRequest}
+          handleDeleteUser={handleDeleteUser}
         />
       )}
     </div>

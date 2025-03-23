@@ -12,17 +12,29 @@ const AdminDashboard = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Filter users, courses, and enrollment requests based on search term
+  // Debug: Log the raw enrollment requests
+  console.log("Raw Enrollment Requests:", enrollmentRequests);
+  console.log("Sample Enrollment Request:", enrollmentRequests[0]);
+
   const filteredUsers = allUsers.filter((user) =>
     user?.username?.toLowerCase().includes(searchTerm.toLowerCase())
   );
   const filteredCourses = allCourses.filter((course) =>
     course?.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
-  const filteredRequests = enrollmentRequests.filter((request) =>
-    request?.course?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request?.student?.username?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredRequests = enrollmentRequests.filter((request) => {
+    if (!searchTerm) return true; // Return all requests if searchTerm is empty
+
+    const courseTitle = request.course?.title?.toLowerCase() || "";
+    const studentUsername = request.student?.username?.toLowerCase() || "";
+    return (
+      courseTitle.includes(searchTerm.toLowerCase()) ||
+      studentUsername.includes(searchTerm.toLowerCase())
+    );
+  });
+
+  // Debug: Log the filtered enrollment requests
+  console.log("Filtered Enrollment Requests:", filteredRequests);
 
   return (
     <div className="p-6">
