@@ -1,8 +1,23 @@
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const InstructorCourseDetail = ({ course, handleDeleteCourse, user }) => {
   const navigate = useNavigate();
   const isCourseOwner = user && user.username === course.instructor;
+
+  const handleDelete = async () => {
+    try {
+      if (window.confirm("Are you sure you want to delete this course?")) {
+        await handleDeleteCourse();
+        toast.success("Course deleted successfully!");
+        navigate("/courses"); // Redirect to courses page after deletion
+      }
+    } catch (error) {
+      toast.error("Error deleting course. Please try again.");
+      console.error("Error deleting course:", error);
+    }
+  };
 
   return (
     <div className="max-w-2xl mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
@@ -41,11 +56,7 @@ const InstructorCourseDetail = ({ course, handleDeleteCourse, user }) => {
           </button>
 
           <button
-            onClick={() => {
-              if (window.confirm("Are you sure you want to delete this course?")) {
-                handleDeleteCourse();
-              }
-            }}
+            onClick={handleDelete}
             className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 ml-4"
           >
             Delete Course
@@ -55,11 +66,11 @@ const InstructorCourseDetail = ({ course, handleDeleteCourse, user }) => {
 
       <div className="mt-6">
         <h2 className="text-xl font-bold mb-4">Lessons</h2>
-        {course.lessons.length === 0 ? (
+        {course.lessons?.length === 0 ? (
           <p>No lessons added yet.</p>
         ) : (
           <div className="space-y-6">
-            {course.lessons.map((lesson) => (
+            {course.lessons?.map((lesson) => (
               <div
                 key={lesson.id}
                 className="border p-4 rounded-lg shadow-sm cursor-pointer hover:bg-gray-50"
@@ -68,7 +79,7 @@ const InstructorCourseDetail = ({ course, handleDeleteCourse, user }) => {
                 <h3 className="text-lg font-semibold">{lesson.title}</h3>
                 <p className="text-gray-600">{lesson.description}</p>
 
-                {lesson.videos.length > 0 && (
+                {lesson.videos?.length > 0 && (
                   <div className="mt-4">
                     <h4 className="font-semibold">Videos</h4>
                     {lesson.videos.map((video) => (
@@ -83,7 +94,7 @@ const InstructorCourseDetail = ({ course, handleDeleteCourse, user }) => {
                   </div>
                 )}
 
-                {lesson.pdfs.length > 0 && (
+                {lesson.pdfs?.length > 0 && (
                   <div className="mt-4">
                     <h4 className="font-semibold">PDFs</h4>
                     {lesson.pdfs.map((pdf) => (

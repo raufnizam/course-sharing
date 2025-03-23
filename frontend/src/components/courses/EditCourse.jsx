@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const EditCourse = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [course, setCourse] = useState({ title: "", description: "", category: "" });
   const [categories, setCategories] = useState([]);
-  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -17,9 +19,9 @@ const EditCourse = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCategories(response.data);
-        console.log("Categories:", response.data); // Debug the categories
       } catch (error) {
-        setMessage("Error fetching categories. Please try again.");
+        toast.error("Error fetching categories. Please try again.");
+        console.error("Error fetching categories:", error);
       }
     };
 
@@ -34,20 +36,19 @@ const EditCourse = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        console.log("API Response:", response.data); // Debug the API response
-
         // Ensure the category is set as the ID
-        const categoryId = response.data.category ? response.data.category.id : "";
+        const categoryId = response.data.category?.id || "";
 
         setCourse({
           title: response.data.title || "",
           description: response.data.description || "",
           category: categoryId, // Set category as the ID
         });
-
-        console.log("Course State:", { title: response.data.title, category: categoryId }); // Debug the course state
       } catch (error) {
-        setMessage("Error fetching course details. Please try again.");
+        toast.error("Error fetching course details. Please try again.");
+        console.error("Error fetching course:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -68,11 +69,12 @@ const EditCourse = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setMessage("Course updated successfully!");
+      toast.success("Course updated successfully!");
       setTimeout(() => navigate(`/courses/${id}`), 1000);
     } catch (error) {
       const errorMsg = error.response?.data?.detail || "Error updating course. Please try again.";
-      setMessage(errorMsg);
+      toast.error(errorMsg);
+      console.error("Error updating course:", error);
     }
   };
 
@@ -84,14 +86,13 @@ const EditCourse = () => {
     }));
   };
 
+  if (loading) {
+    return <div className="text-center mt-10">Loading...</div>;
+  }
+
   return (
     <div className="max-w-2xl mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
       <h1 className="text-2xl font-bold mb-6">Edit Course</h1>
-      {message && (
-        <div className={`mb-4 ${message.includes("Error") ? "text-red-500" : "text-green-500"}`}>
-          {message}
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

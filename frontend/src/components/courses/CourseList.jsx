@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import CourseItem from "./CourseItem"; // Import the CourseItem component
 
 const CourseList = () => {
   const [courses, setCourses] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState("");
   const navigate = useNavigate();
@@ -20,9 +21,10 @@ const CourseList = () => {
         const response = await axios.get("http://127.0.0.1:8000/auth/profile/", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        setUserRole(response.data.role);
+        setUserRole(response.data.profile?.role || "");
       } catch (error) {
-        setMessage("Error fetching user data. Please log in again.");
+        toast.error("Error fetching user data. Please log in again.");
+        console.error("Error fetching user data:", error);
       }
     };
     fetchUserData();
@@ -38,7 +40,8 @@ const CourseList = () => {
         });
         setCategories(response.data);
       } catch (error) {
-        setMessage("Error fetching categories. Please try again.");
+        toast.error("Error fetching categories. Please try again.");
+        console.error("Error fetching categories:", error);
       }
     };
     fetchCategories();
@@ -54,7 +57,8 @@ const CourseList = () => {
         });
         setCourses(response.data);
       } catch (error) {
-        setMessage("Error fetching courses. Please try again.");
+        toast.error("Error fetching courses. Please try again.");
+        console.error("Error fetching courses:", error);
       } finally {
         setLoading(false);
       }
@@ -73,7 +77,6 @@ const CourseList = () => {
 
       {/* Display Loading or Message */}
       {loading && <div className="text-blue-500 mb-4">Loading courses...</div>}
-      {message && <div className="text-red-500 mb-4">{message}</div>}
 
       {/* Category Filter Dropdown */}
       <div className="mb-6">

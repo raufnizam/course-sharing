@@ -41,22 +41,29 @@ def login_user(request):
         return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
 # User Profile
-@api_view(['GET'])
+@api_view(['GET', 'PUT'])
 @permission_classes([IsAuthenticated])
 def user_profile(request):
     user = request.user
-    profile = user.profile  # Access the profile
-    data = {
-        "id": user.id,
-        "username": user.username,
-        "email": user.email,
-        "is_staff": user.is_staff,
-        "is_active": user.is_active,
-        "date_joined": user.date_joined,
-        "role": profile.role,  # Include role in the response
-    }
-    return Response(data)
 
+    if request.method == 'GET':
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+
+    elif request.method == 'PUT':
+        data = request.data.copy()
+        if 'profile' not in data:
+            data['profile'] = {}
+
+        serializer = UserSerializer(user, data=data, partial=True, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    
+    
+    
 # Admin: List All Users
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsAdminUser])  # Only admins can access

@@ -2,19 +2,20 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Login from "./components/Login";
 import Register from "./components/Register";
-import Dashboard from "./components/Dashboard";
-import CreateCourse from "./components/CreateCourse";
-import CourseList from "./components/CourseList";
-import CourseDetail from "./components/CourseDetail";
-import AddLesson from "./components/AddLesson"; // Import the AddLesson component
+import Dashboard from "./components/dashboard/Dashboard";
+import CreateCourse from "./components/courses/CreateCourse";
+import CourseList from "./components/courses/CourseList";
+import CourseDetail from "./components/courses/CourseDetail";
+import AddLesson from "./components/lesson/AddLesson"; // Import the AddLesson component
 import Home from "./pages/Home";
 import { ToastContainer } from "react-toastify";
-import LessonDetail from "./components/LessonDetail";
-import LessonEdit from "./components/LessonEdit";
-import EditCourse from "./components/EditCourse";
-import CategoryList from "./components/CategoryList";
-import CreateCategory from "./components/CreateCategory";
-import EditCategory from "./components/EditCategory";
+import LessonDetail from "./components/lesson/LessonDetail";
+import LessonEdit from "./components/lesson/LessonEdit";
+import EditCourse from "./components/courses/EditCourse";
+import CategoryList from "./components/category/CategoryList";
+import CreateCategory from "./components/category/CreateCategory";
+import EditCategory from "./components/category/EditCategory";
+import Profile from "./components/Profile";
 
 
 const App = () => {
@@ -28,6 +29,7 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/create-course" element={<CreateCourse />} />
           <Route path="/courses" element={<CourseList />} />
           <Route path="/courses/:id" element={<CourseDetail />} />

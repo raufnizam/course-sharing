@@ -1,4 +1,3 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
 
 const StudentCourseDetail = ({ course, isEnrolled, enrollmentRequestStatus, handleRequestEnrollment, handleWithdraw, requestMessage, setRequestMessage }) => {
@@ -16,7 +15,10 @@ const StudentCourseDetail = ({ course, isEnrolled, enrollmentRequestStatus, hand
       </button>
 
       <div className="space-y-4">
+        {console.log(course)        }
         <p><strong>Title:</strong> {course.title}</p>
+        <p><strong>Instructor:</strong> {course.instructor}</p>
+        <p><strong>Category:</strong> {course.category}</p>
         <p><strong>Description:</strong> {course.description}</p>
         {isEnrolled && (
           <>
@@ -64,11 +66,11 @@ const StudentCourseDetail = ({ course, isEnrolled, enrollmentRequestStatus, hand
       {isEnrolled && (
         <div className="mt-6">
           <h2 className="text-xl font-bold mb-4">Lessons</h2>
-          {course.lessons.length === 0 ? (
+          {course.lessons?.length === 0 ? (
             <p>No lessons added yet.</p>
           ) : (
             <div className="space-y-6">
-              {course.lessons.map((lesson) => (
+              {course.lessons?.map((lesson) => (
                 <div
                   key={lesson.id}
                   className="border p-4 rounded-lg shadow-sm cursor-pointer hover:bg-gray-50"
@@ -77,7 +79,7 @@ const StudentCourseDetail = ({ course, isEnrolled, enrollmentRequestStatus, hand
                   <h3 className="text-lg font-semibold">{lesson.title}</h3>
                   <p className="text-gray-600">{lesson.description}</p>
 
-                  {lesson.videos.length > 0 && (
+                  {lesson.videos?.length > 0 && (
                     <div className="mt-4">
                       <h4 className="font-semibold">Videos</h4>
                       {lesson.videos.map((video) => (
@@ -92,7 +94,7 @@ const StudentCourseDetail = ({ course, isEnrolled, enrollmentRequestStatus, hand
                     </div>
                   )}
 
-                  {lesson.pdfs.length > 0 && (
+                  {lesson.pdfs?.length > 0 && (
                     <div className="mt-4">
                       <h4 className="font-semibold">PDFs</h4>
                       {lesson.pdfs.map((pdf) => (

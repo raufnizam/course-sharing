@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import CourseCard from "./CourseCard";
+import EnrollmentRequestCard from "./EnrollmentRequestCard";
 
 const AdminDashboard = ({
   allUsers = [],
@@ -8,7 +10,7 @@ const AdminDashboard = ({
   handleApproveRequest,
   handleRejectRequest,
 }) => {
-  const [searchTerm, setSearchTerm] = useState(""); // State for search term
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Filter users, courses, and enrollment requests based on search term
   const filteredUsers = allUsers.filter((user) =>
@@ -68,11 +70,7 @@ const AdminDashboard = ({
         {filteredCourses.length > 0 ? (
           <ul className="space-y-4">
             {filteredCourses.map((course) => (
-              <li key={course?.id} className="border p-4 rounded-md shadow-sm">
-                <p><strong>Title:</strong> {course?.title}</p>
-                <p><strong>Description:</strong> {course?.description}</p>
-                <p><strong>Instructor:</strong> {course?.instructor}</p>
-              </li>
+              <CourseCard key={course?.id} course={course} />
             ))}
           </ul>
         ) : (
@@ -86,27 +84,12 @@ const AdminDashboard = ({
         {filteredRequests.length > 0 ? (
           <ul className="space-y-4">
             {filteredRequests.map((request) => (
-              <li key={request?.id} className="border p-4 rounded-md shadow-sm">
-                <p><strong>Course:</strong> {request?.course?.title}</p>
-                <p><strong>Student:</strong> {request?.student?.username}</p>
-                <p><strong>Status:</strong> {request?.status}</p>
-                {request?.status === "pending" && (
-                  <div className="mt-2">
-                    <button
-                      onClick={() => handleApproveRequest(request?.id)}
-                      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 mr-2"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => handleRejectRequest(request?.id)}
-                      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                )}
-              </li>
+              <EnrollmentRequestCard
+                key={request?.id}
+                request={request}
+                onApprove={handleApproveRequest}
+                onReject={handleRejectRequest}
+              />
             ))}
           </ul>
         ) : (
