@@ -13,8 +13,8 @@ const AdminDashboard = ({
   const [searchTerm, setSearchTerm] = useState("");
 
   // Debug: Log the raw enrollment requests
-  console.log("Raw Enrollment Requests:", enrollmentRequests);
-  console.log("Sample Enrollment Request:", enrollmentRequests[0]);
+  // console.log("Raw Enrollment Requests:", enrollmentRequests);
+  // console.log("Sample Enrollment Request:", enrollmentRequests[0]);
 
   const filteredUsers = allUsers.filter((user) =>
     user?.username?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -34,7 +34,7 @@ const AdminDashboard = ({
   });
 
   // Debug: Log the filtered enrollment requests
-  console.log("Filtered Enrollment Requests:", filteredRequests);
+  // console.log("Filtered Enrollment Requests:", filteredRequests);
 
   return (
     <div className="p-6">

@@ -26,6 +26,7 @@ const Navbar = () => {
           localStorage.removeItem("refresh_token");
           toast.success("You have been logged out successfully.");
           navigate("/login"); // Use navigate for smoother redirection
+          window.location.href = "/login";
         } catch (error) {
           toast.error("An error occurred during logout. Please try again.");
           console.error("Logout error:", error);
