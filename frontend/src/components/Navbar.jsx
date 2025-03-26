@@ -2,12 +2,32 @@ import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 
 const Navbar = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // State for mobile menu
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [userRole, setUserRole] = useState("");
   const isAuthenticated = !!localStorage.getItem("access_token");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        const response = await axios.get("http://127.0.0.1:8000/auth/profile/", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUserRole(response.data.profile?.role || "");
+      } catch (error) {
+        console.error("Error fetching user role:", error);
+      }
+    };
+
+    if (isAuthenticated) {
+      fetchUserRole();
+    }
+  }, [isAuthenticated]);
 
   const onLogout = () => {
     Swal.fire({
@@ -21,11 +41,11 @@ const Navbar = () => {
     }).then((result) => {
       if (result.isConfirmed) {
         try {
-          // Remove tokens and user-related data
           localStorage.removeItem("access_token");
           localStorage.removeItem("refresh_token");
+          setUserRole("");
           toast.success("You have been logged out successfully.");
-          navigate("/login"); // Use navigate for smoother redirection
+          navigate("/login");
           window.location.href = "/login";
         } catch (error) {
           toast.error("An error occurred during logout. Please try again.");
@@ -38,10 +58,14 @@ const Navbar = () => {
   const authenticatedLinks = [
     { name: "Dashboard", path: "/dashboard" },
     { name: "Courses", path: "/courses" },
-    { name: "Categories", path: "/categories" },
     { name: "Profile", path: "/profile" },
     { name: "Coaches", path: "/coaches" },
   ];
+
+  // Add Categories link only for admin users
+  if (userRole === "admin") {
+    authenticatedLinks.push({ name: "Categories", path: "/categories" });
+  }
 
   return (
     <nav className="border-b border-gray-800 text-gray-800 flex p-4 justify-between items-center">
