@@ -16,8 +16,9 @@ import EditCourse from "./components/courses/EditCourse";
 import CategoryList from "./components/category/CategoryList";
 import CreateCategory from "./components/category/CreateCategory";
 import EditCategory from "./components/category/EditCategory";
-import Profile from "./components/Profile";
 import NotFound from "./components/NotFound"; // Add a 404 Not Found component
+import Profile from "./components/profile/Profile";
+import ProfileEdit from "./components/profile/ProfileEdit";
 
 const App = () => {
   const isAuthenticated = !!localStorage.getItem("access_token");
@@ -57,6 +58,12 @@ const App = () => {
           <Route
             path="/profile"
             element={isAuthenticated ? <Profile /> : <Navigate to="/login" />}
+            
+          />
+          <Route
+            path="/profile/edit"
+            element={isAuthenticated ? <ProfileEdit /> : <Navigate to="/login" />}
+            
           />
           <Route
             path="/create-course"

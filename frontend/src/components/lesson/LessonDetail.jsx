@@ -83,11 +83,11 @@ const LessonDetail = () => {
       </button>
 
       {/* Lesson Information */}
+      {console.log(lesson)}
       <div className="space-y-4">
         <p><strong>Title:</strong> {lesson.title}</p>
         <p><strong>Description:</strong> {lesson.description}</p>
         <p><strong>Order:</strong> {lesson.order}</p>
-        <p><strong>Related Course:</strong> {lesson.course?.title || "No course assigned"}</p>
       </div>
 
       {/* Video Section */}
