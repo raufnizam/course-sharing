@@ -8,6 +8,7 @@ class Profile(models.Model):
         ('admin', 'Admin'),  # Add admin role
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    full_name = models.CharField(max_length=100, blank=True, null=True, default='ok')
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='student')
     profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
     bio = models.TextField(null=True, blank=True)

@@ -20,36 +20,51 @@ class ProfileSerializer(serializers.ModelSerializer):
 
         
         
-
 class UserSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(required=False)  # Make profile optional
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'password', 'profile']
-        extra_kwargs = {'password': {'write_only': True}}
+        fields = ['id', 'username', 'first_name', 'last_name', 'email', 'password', 'profile']
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'first_name': {'required': False, 'allow_blank': True},
+            'last_name': {'required': False, 'allow_blank': True}
+        }
 
     def create(self, validated_data):
-        profile_data = validated_data.pop('profile', {})  # Get profile data if it exists
-        validated_data['password'] = make_password(validated_data['password'])
-        user = super().create(validated_data)
-        Profile.objects.create(user=user, **profile_data)  # Create profile with optional data
+        profile_data = validated_data.pop('profile', {})
+        # Handle first_name and last_name during creation
+        user = User.objects.create(
+            username=validated_data['username'],
+            email=validated_data.get('email', ''),
+            first_name=validated_data.get('first_name', ''),
+            last_name=validated_data.get('last_name', ''),
+            password=make_password(validated_data['password'])
+        )
+        Profile.objects.create(user=user, **profile_data)
         return user
 
     def update(self, instance, validated_data):
         profile_data = validated_data.pop('profile', {})
         profile = instance.profile
 
-        # Handle user fields
+        # Update user fields including first_name and last_name
+        instance.first_name = validated_data.get('first_name', instance.first_name)
+        instance.last_name = validated_data.get('last_name', instance.last_name)
         instance.username = validated_data.get('username', instance.username)
         instance.email = validated_data.get('email', instance.email)
         instance.save()
 
-        # Handle profile fields
-        profile.bio = profile_data.get('bio', profile.bio)
-        profile.phone_number = profile_data.get('phone_number', profile.phone_number)
-        if 'profile_image' in profile_data:
-            profile.profile_image = profile_data['profile_image']
-        profile.save()
+        # Update profile fields
+        if profile_data:
+            profile_serializer = ProfileSerializer(
+                profile, 
+                data=profile_data, 
+                partial=True,
+                context=self.context
+            )
+            if profile_serializer.is_valid():
+                profile_serializer.save()
 
         return instance

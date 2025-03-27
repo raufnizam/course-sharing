@@ -1,57 +1,61 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const Profile = () => {
+const UserProfile = () => {
+  const { username } = useParams();
   const [userData, setUserData] = useState({
     username: "",
     email: "",
-    first_name: "",
-    last_name: "",
     profile: {
       role: "",
       bio: "",
       phone_number: "",
       profile_image: null,
+      full_name: ""
     },
   });
   const [loading, setLoading] = useState(true);
+  const [isCurrentUser, setIsCurrentUser] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        if (!token) {
-          toast.error("Please login to view your profile");
-          navigate("/login");
-          return;
-        }
+        const currentUser = JSON.parse(localStorage.getItem("user"));
 
-        const response = await axios.get("http://127.0.0.1:8000/auth/profile/", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        
+        const response = await axios.get(
+          `http://127.0.0.1:8000/auth/users/${username}/`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
         setUserData({
           username: response.data.username,
           email: response.data.email,
-          first_name: response.data.first_name || "",
-          last_name: response.data.last_name || "",
           profile: {
             role: response.data.profile?.role || "No role assigned",
             bio: response.data.profile?.bio || "No bio provided",
             phone_number: response.data.profile?.phone_number || "Not provided",
             profile_image: response.data.profile?.profile_image || null,
+            full_name: response.data.profile?.full_name || ""
           },
         });
+
+        setIsCurrentUser(currentUser?.username === response.data.username);
       } catch (error) {
         if (error.response?.status === 401) {
-          toast.error("Session expired. Please login again");
+          toast.error("Please login to view profiles");
           navigate("/login");
+        } else if (error.response?.status === 404) {
+          toast.error("User not found");
+          navigate(-1);
         } else {
           toast.error("Error loading profile data");
           console.error("Error fetching profile:", error);
@@ -60,16 +64,9 @@ const Profile = () => {
         setLoading(false);
       }
     };
-    
+
     fetchProfile();
-  }, [navigate]);
-
-  const handleEditClick = () => {
-    navigate("/profile/edit");
-  };
-
-  // Combine first and last name for display
-  const fullName = `${userData.first_name} ${userData.last_name}`.trim();
+  }, [username, navigate]);
 
   if (loading) {
     return (
@@ -82,7 +79,9 @@ const Profile = () => {
 
   return (
     <div className="max-w-md mx-auto mt-10 p-6 bg-white shadow-md rounded-lg">
-      <h1 className="text-2xl font-bold mb-6 text-center">Your Profile</h1>
+      <h1 className="text-2xl font-bold mb-6 text-center">
+        {userData.profile.full_name || userData.username}'s Profile
+      </h1>
       
       <div className="flex flex-col items-center mb-6">
         {userData.profile.profile_image ? (
@@ -99,21 +98,16 @@ const Profile = () => {
       </div>
 
       <div className="space-y-4">
-        {fullName && (
+        {userData.profile.full_name && (
           <div className="border-b pb-4">
             <h2 className="text-sm font-medium text-gray-500">Full Name</h2>
-            <p className="mt-1 text-lg">{fullName}</p>
+            <p className="mt-1 text-lg">{userData.profile.full_name}</p>
           </div>
         )}
 
         <div className="border-b pb-4">
           <h2 className="text-sm font-medium text-gray-500">Username</h2>
           <p className="mt-1 text-lg">{userData.username}</p>
-        </div>
-
-        <div className="border-b pb-4">
-          <h2 className="text-sm font-medium text-gray-500">Email</h2>
-          <p className="mt-1 text-lg">{userData.email}</p>
         </div>
 
         <div className="border-b pb-4">
@@ -130,22 +124,29 @@ const Profile = () => {
           </div>
         )}
 
-        {userData.profile.phone_number && (
-          <div className="border-b pb-4">
-            <h2 className="text-sm font-medium text-gray-500">Phone Number</h2>
-            <p className="mt-1 text-lg">{userData.profile.phone_number}</p>
-          </div>
+        {isCurrentUser && (
+          <>
+            <div className="border-b pb-4">
+              <h2 className="text-sm font-medium text-gray-500">Email</h2>
+              <p className="mt-1 text-lg">{userData.email}</p>
+            </div>
+            {userData.profile.phone_number && (
+              <div className="border-b pb-4">
+                <h2 className="text-sm font-medium text-gray-500">Phone Number</h2>
+                <p className="mt-1 text-lg">{userData.profile.phone_number}</p>
+              </div>
+            )}
+            <button
+              onClick={() => navigate("/profile/edit")}
+              className="w-full mt-6 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200"
+            >
+              Edit Profile
+            </button>
+          </>
         )}
       </div>
-
-      <button
-        onClick={handleEditClick}
-        className="w-full mt-6 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200"
-      >
-        Edit Profile
-      </button>
     </div>
   );
 };
 
-export default Profile;
+export default UserProfile;

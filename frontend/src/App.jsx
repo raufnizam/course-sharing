@@ -19,6 +19,7 @@ import EditCategory from "./components/category/EditCategory";
 import NotFound from "./components/NotFound"; // Add a 404 Not Found component
 import Profile from "./components/profile/Profile";
 import ProfileEdit from "./components/profile/ProfileEdit";
+import UserProfile from "./components/profile/UserProfile";
 
 const App = () => {
   const isAuthenticated = !!localStorage.getItem("access_token");
@@ -55,6 +56,10 @@ const App = () => {
             path="/dashboard"
             element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
           />
+          <Route
+  path="/users/:username"
+  element={isAuthenticated ? <UserProfile /> : <Navigate to="/login" />}
+/>
           <Route
             path="/profile"
             element={isAuthenticated ? <Profile /> : <Navigate to="/login" />}

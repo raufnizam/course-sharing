@@ -41,6 +41,7 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
         model = CourseEnrollment
         fields = ['id', 'student', 'course', 'enrolled_at']
         read_only_fields = ['student', 'enrolled_at']
+        
 
 class CourseSerializer(serializers.ModelSerializer):
     lessons = LessonSerializer(many=True, read_only=True)  

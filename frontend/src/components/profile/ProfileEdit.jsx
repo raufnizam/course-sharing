@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify"; 
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const ProfileEdit = () => {
   const [userData, setUserData] = useState({
+    first_name: "",
+    last_name: "",
     username: "",
     email: "",
     profile: {
@@ -36,6 +38,8 @@ const ProfileEdit = () => {
         });
         
         setUserData({
+          first_name: response.data.first_name || "",
+          last_name: response.data.last_name || "",
           username: response.data.username,
           email: response.data.email,
           profile: {
@@ -92,20 +96,24 @@ const ProfileEdit = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-
+  
     try {
       const token = localStorage.getItem("access_token");
       const formData = new FormData();
       
-      // Only include editable fields
-      formData.append("profile.bio", userData.profile.bio);
-      formData.append("profile.phone_number", userData.profile.phone_number);
+      // Append user fields
+      formData.append("first_name", userData.first_name);
+      formData.append("last_name", userData.last_name);
+      
+      // Append profile fields with proper nested structure
+      formData.append("profile[bio]", userData.profile.bio);
+      formData.append("profile[phone_number]", userData.profile.phone_number);
       
       if (userData.profile.profile_image instanceof File) {
-        formData.append("profile.profile_image", userData.profile.profile_image);
+        formData.append("profile[profile_image]", userData.profile.profile_image);
       }
-
-      await axios.put(
+  
+      const response = await axios.put(
         "http://127.0.0.1:8000/auth/profile/",
         formData,
         {
@@ -115,17 +123,20 @@ const ProfileEdit = () => {
           },
         }
       );
-
+  
       toast.success("Profile updated successfully!");
       navigate("/profile");
     } catch (error) {
+      console.error("Update error:", error.response?.data || error.message);
       let errorMessage = "Error updating profile";
-      if (error.response) {
-        if (error.response.status === 401) {
-          errorMessage = "Session expired. Please login again";
-          navigate("/login");
-        } else if (error.response.data) {
-          errorMessage = error.response.data.message || JSON.stringify(error.response.data);
+      if (error.response?.data) {
+        // Handle validation errors
+        if (typeof error.response.data === 'object') {
+          errorMessage = Object.entries(error.response.data)
+            .map(([field, errors]) => `${field}: ${errors.join(', ')}`)
+            .join('\n');
+        } else {
+          errorMessage = error.response.data;
         }
       }
       toast.error(errorMessage);
@@ -148,6 +159,30 @@ const ProfileEdit = () => {
       <h1 className="text-2xl font-bold mb-6 text-center">Edit Profile</h1>
       
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Name fields */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">First Name</label>
+            <input
+              type="text"
+              name="first_name"
+              value={userData.first_name}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Last Name</label>
+            <input
+              type="text"
+              name="last_name"
+              value={userData.last_name}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        </div>
+
         {/* Non-editable fields (display only) */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Username</label>

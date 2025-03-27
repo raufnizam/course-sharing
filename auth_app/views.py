@@ -92,3 +92,84 @@ def delete_user(request, user_id):
         return Response({"message": "User deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
     except User.DoesNotExist:
         return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+    
+# Add this at the top with other imports
+from rest_framework.generics import ListAPIView
+from django.shortcuts import get_object_or_404
+
+# Add these new views
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_users_by_ids(request):
+    """Get multiple users by their IDs"""
+    user_ids = request.query_params.get('ids', '').split(',')
+    try:
+        user_ids = [int(id) for id in user_ids if id]
+    except ValueError:
+        return Response({"error": "Invalid user IDs"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    users = User.objects.filter(id__in=user_ids).select_related('profile')
+    
+    user_data = []
+    for user in users:
+        profile = getattr(user, 'profile', None)
+        user_data.append({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "profile": {
+                "id": profile.id if profile else None,
+                "full_name": profile.full_name if profile else None,
+                "role": profile.role if profile else None
+            }
+        })
+    
+    return Response(user_data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_detail(request, user_id):
+    """Get detailed user information"""
+    user = get_object_or_404(User, id=user_id)
+    profile = getattr(user, 'profile', None)
+    
+    data = {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "profile": {
+            "id": profile.id if profile else None,
+            "full_name": profile.full_name if profile else None,
+            "role": profile.role if profile else None,
+            "bio": profile.bio if profile else None,
+            # Add other profile fields as needed
+        }
+    }
+    return Response(data)
+    
+    
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def user_detail(request, username):
+    try:
+        user = User.objects.get(username=username)
+        profile = getattr(user, 'profile', None)
+        
+        data = {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "profile": {
+                "id": profile.id if profile else None,
+                "full_name": getattr(profile, 'full_name', None),
+                "role": profile.role if profile else None,
+                "bio": getattr(profile, 'bio', None),
+                "phone_number": getattr(profile, 'phone_number', None),
+                "profile_image": profile.profile_image.url if profile and profile.profile_image else None,
+            }
+        }
+        return Response(data)
+    except User.DoesNotExist:
+        return Response({"error": "User not found"}, status=404)    
+
+    

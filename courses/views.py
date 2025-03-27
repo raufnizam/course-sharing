@@ -306,4 +306,29 @@ def withdraw_enrollment_request(request, request_id):
         return Response({"error": "Enrollment request not found."}, status=404)
     
     
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def course_enrollments(request, course_id):
+    user = request.user
+    try:
+        profile = user.profile
+        if profile.role != "instructor":
+            return Response({"error": "Only instructors can view course enrollments."}, status=403)
+
+        try:
+            course = Course.objects.get(id=course_id)
+        except Course.DoesNotExist:
+            return Response({"error": "Course not found."}, status=404)
+
+        # Verify the requesting instructor owns the course
+        if course.instructor != user:
+            return Response({"error": "You are not the instructor of this course."}, status=403)
+
+        enrollments = CourseEnrollment.objects.filter(course=course).select_related('student__profile')
+        serializer = CourseEnrollmentSerializer(enrollments, many=True)
+        return Response(serializer.data)
+    except Profile.DoesNotExist:
+        return Response({"error": "User profile not found."}, status=404)
+    
+    
     
