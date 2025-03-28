@@ -121,6 +121,7 @@ const CourseDetail = () => {
   }
 
   const isInstructor = user?.profile?.role === "instructor";
+  const isCourseCreator = user?.id === course?.instructor?.id;
 
   return (
     <>
@@ -129,6 +130,7 @@ const CourseDetail = () => {
           course={course}
           handleDeleteCourse={handleDeleteCourse}
           user={user}
+          isCourseCreator={isCourseCreator} // Pass this prop to InstructorCourseDetail
         />
       ) : (
         <StudentCourseDetail

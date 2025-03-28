@@ -17,6 +17,12 @@ const InstructorCourseDetail = ({ course, handleDeleteCourse, user }) => {
       try {
         const token = localStorage.getItem("access_token");
 
+        // Only fetch enrollments if the current user is the course owner
+        if (!isCourseOwner) {
+          setLoading(false);
+          return;
+        }
+
         // 1. Fetch enrollments which includes student IDs
         const enrollmentsRes = await axios.get(
           `http://127.0.0.1:8000/api/course-enrollments/${course.id}/`,
@@ -59,9 +65,7 @@ const InstructorCourseDetail = ({ course, handleDeleteCourse, user }) => {
       }
     };
 
-    if (isCourseOwner) {
-      fetchData();
-    }
+    fetchData();
   }, [course.id, isCourseOwner]);
 
   const handleDelete = async () => {
@@ -196,7 +200,7 @@ const InstructorCourseDetail = ({ course, handleDeleteCourse, user }) => {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {isCourseOwner && (
+          {isCourseOwner ? (
             <>
               {/* Management Actions */}
               <div className="bg-gray-50 p-4 rounded-lg">
@@ -219,7 +223,7 @@ const InstructorCourseDetail = ({ course, handleDeleteCourse, user }) => {
                 </div>
               </div>
 
-              {/* Enrolled Students */}
+              {/* Enrolled Students - Only shown to course owner */}
               <div className="bg-gray-50 p-4 rounded-lg">
                 <div className="flex justify-between items-center mb-3">
                   <h2 className="text-xl font-semibold">
@@ -256,7 +260,7 @@ const InstructorCourseDetail = ({ course, handleDeleteCourse, user }) => {
                             </p>
                           </div>
                           <div className="flex space-x-2">
-                          <button
+                            <button
                               onClick={() =>
                                 handleViewProfile(enrollment.student)
                               }
@@ -280,6 +284,15 @@ const InstructorCourseDetail = ({ course, handleDeleteCourse, user }) => {
                 )}
               </div>
             </>
+          ) : (
+            // Show a message for non-owner instructors
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h2 className="text-xl font-semibold mb-3">Course Access</h2>
+              <p className="text-gray-600">
+                You are viewing this course as an instructor. Only the course creator can 
+                manage enrollments and edit course details.
+              </p>
+            </div>
           )}
         </div>
       </div>
