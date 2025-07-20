@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../api";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -19,7 +19,7 @@ const CourseList = () => {
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        const response = await axios.get("http://127.0.0.1:8000/auth/profile/", {
+        const response = await api.get("/auth/profile/", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUserRole(response.data.profile?.role || "");
@@ -36,7 +36,7 @@ const CourseList = () => {
     const fetchCategories = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        const response = await axios.get("http://127.0.0.1:8000/api/categories", {
+        const response = await api.get("/api/categories/", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCategories(response.data);
@@ -53,7 +53,7 @@ const CourseList = () => {
     const fetchCourses = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        const response = await axios.get("http://127.0.0.1:8000/api/courses/", {
+        const response = await api.get("/api/courses/", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCourses(response.data);
@@ -69,9 +69,10 @@ const CourseList = () => {
 
   // Filter courses by selected category and search term
   const filteredCourses = courses.filter((course) => {
-    const matchesCategory = 
-      !selectedCategory || 
-      course.category?.id === selectedCategory;
+    const categoryObject = selectedCategory ? categories.find(c => c.id == selectedCategory) : null;
+    const matchesCategory =
+      !selectedCategory ||
+      (categoryObject && course.category === categoryObject.name);
     const matchesSearch =
       course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       course.description.toLowerCase().includes(searchTerm.toLowerCase());

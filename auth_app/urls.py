@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     register_user, login_user, user_profile, 
     list_all_users, delete_user,
-    get_users_by_ids, get_user_detail, user_detail
+    get_users_by_ids, get_user_detail
 )
 
 urlpatterns = [
@@ -14,6 +14,5 @@ urlpatterns = [
     
     # Add these new endpoints
     path('users/', get_users_by_ids, name='get_users_by_ids'),
-    path('users/<str:username>/', user_detail, name='user-detail'),
-    path('users/<int:user_id>/', get_user_detail, name='user_detail'),
+    path('users/<int:user_id>/', get_user_detail, name='get_user_detail'),
 ]

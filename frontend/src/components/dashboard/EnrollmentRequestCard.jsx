@@ -1,7 +1,8 @@
 import useUserData from "./useUserData"; // Import custom hook
+import PropTypes from "prop-types";
 
 const EnrollmentRequestCard = ({ request, onApprove, onReject, onWithdraw }) => {
-  const { userData, loading, error } = useUserData();
+  const { userData } = useUserData();
   const role = userData.profile?.role;
 
   return (
@@ -45,6 +46,23 @@ const EnrollmentRequestCard = ({ request, onApprove, onReject, onWithdraw }) => 
       )}
     </li>
   );
+};
+
+EnrollmentRequestCard.propTypes = {
+  request: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    course: PropTypes.shape({
+      title: PropTypes.string,
+    }),
+    student: PropTypes.shape({
+      username: PropTypes.string,
+    }),
+    status: PropTypes.string.isRequired,
+    message: PropTypes.string,
+  }).isRequired,
+  onApprove: PropTypes.func,
+  onReject: PropTypes.func,
+  onWithdraw: PropTypes.func,
 };
 
 export default EnrollmentRequestCard;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../api";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -20,17 +20,14 @@ const CourseDetail = () => {
     const fetchCourse = async () => {
       try {
         const token = localStorage.getItem("access_token");
+        const headers = { Authorization: `Bearer ${token}` };
 
-        // Fetch user profile
-        const userResponse = await axios.get(`http://127.0.0.1:8000/auth/profile/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const [userResponse, courseResponse] = await Promise.all([
+          api.get(`/auth/profile/`, { headers }),
+          api.get(`/api/courses/${id}/`, { headers }),
+        ]);
+
         setUser(userResponse.data);
-
-        // Fetch course details
-        const courseResponse = await axios.get(`http://127.0.0.1:8000/api/courses/${id}/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
 
         const data = courseResponse.data;
         data.lessons = data.lessons || [];
@@ -41,16 +38,12 @@ const CourseDetail = () => {
 
         setCourse(data);
 
-        // Check enrollment and request status for students
         if (userResponse.data.profile?.role === "student") {
-          const enrollmentResponse = await axios.get(`http://127.0.0.1:8000/api/check-enrollment/${id}/`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          const [enrollmentResponse, requestResponse] = await Promise.all([
+            api.get(`/api/check-enrollment/${id}/`, { headers }),
+            api.get(`/api/check-enrollment-request/${id}/`, { headers }),
+          ]);
           setIsEnrolled(enrollmentResponse.data.is_enrolled);
-
-          const requestResponse = await axios.get(`http://127.0.0.1:8000/api/check-enrollment-request/${id}/`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
           setEnrollmentRequestStatus(requestResponse.data.status);
         }
       } catch (error) {
@@ -68,8 +61,8 @@ const CourseDetail = () => {
     try {
       const token = localStorage.getItem("access_token");
       const payload = { message: requestMessage || "" }; // Ensure message is not undefined
-      await axios.post(
-        `http://127.0.0.1:8000/api/request-enrollment/${id}/`,
+      await api.post(
+        `/api/request-enrollment/${id}/`,
         payload,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -87,7 +80,7 @@ const CourseDetail = () => {
   const handleWithdraw = async () => {
     try {
       const token = localStorage.getItem("access_token");
-      await axios.delete(`http://127.0.0.1:8000/api/withdraw-course/${id}/`, {
+      await api.delete(`/api/withdraw-course/${id}/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success("Successfully withdrawn from the course.");
@@ -101,7 +94,7 @@ const CourseDetail = () => {
   const handleDeleteCourse = async () => {
     try {
       const token = localStorage.getItem("access_token");
-      await axios.delete(`http://127.0.0.1:8000/api/courses/${id}/`, {
+      await api.delete(`/api/courses/${id}/`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success("Course deleted successfully!");

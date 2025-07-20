@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +22,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/auth/login/", formData);
+      const response = await api.post("/auth/login/", formData);
       localStorage.setItem("access_token", response.data.access);
       localStorage.setItem("refresh_token", response.data.refresh);
       
@@ -30,7 +30,6 @@ const Login = () => {
       
       // Force a full page refresh after successful login
       navigate("/dashboard");
-      window.location.href = "/dashboard";
       
     } catch (error) {
       const errorMsg = error.response?.data?.error || "An error occurred during login. Please try again.";

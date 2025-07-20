@@ -1,6 +1,7 @@
 import { useState } from "react";
 import CourseCard from "./CourseCard";
 import EnrollmentRequestCard from "./EnrollmentRequestCard";
+import PropTypes from "prop-types";
 
 const AdminDashboard = ({
   allUsers = [],
@@ -110,6 +111,37 @@ const AdminDashboard = ({
       </div>
     </div>
   );
+};
+
+AdminDashboard.propTypes = {
+  allUsers: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      username: PropTypes.string.isRequired,
+      email: PropTypes.string.isRequired,
+      role: PropTypes.string.isRequired,
+    })
+  ),
+  allCourses: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      title: PropTypes.string.isRequired,
+    })
+  ),
+  enrollmentRequests: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      course: PropTypes.shape({
+        title: PropTypes.string,
+      }),
+      student: PropTypes.shape({
+        username: PropTypes.string,
+      }),
+    })
+  ),
+  handleDeleteUser: PropTypes.func.isRequired,
+  handleApproveRequest: PropTypes.func.isRequired,
+  handleRejectRequest: PropTypes.func.isRequired,
 };
 
 export default AdminDashboard;

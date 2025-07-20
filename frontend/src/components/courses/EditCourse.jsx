@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../api";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -12,37 +12,31 @@ const EditCourse = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        const response = await axios.get("http://127.0.0.1:8000/api/categories/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setCategories(response.data);
-      } catch (error) {
-        toast.error("Error fetching categories. Please try again.");
-        console.error("Error fetching categories:", error);
-      }
-    };
+        const headers = { Authorization: `Bearer ${token}` };
 
-    fetchCategories();
-  }, []);
+        const [categoriesResponse, courseResponse] = await Promise.all([
+          api.get("/api/categories/", { headers }),
+          api.get(`/api/courses/${id}/`, { headers }),
+        ]);
 
-  useEffect(() => {
-    const fetchCourse = async () => {
-      try {
-        const token = localStorage.getItem("access_token");
-        const response = await axios.get(`http://127.0.0.1:8000/api/courses/${id}/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const fetchedCategories = categoriesResponse.data;
+        const fetchedCourse = courseResponse.data;
 
-        // Ensure the category is set as the ID
-        const categoryId = response.data.category?.id || "";
+        setCategories(fetchedCategories);
+
+        const categoryName = fetchedCourse.category;
+        const category = fetchedCategories.find(
+          (cat) => cat.name === categoryName
+        );
+        const categoryId = category ? category.id : "";
 
         setCourse({
-          title: response.data.title || "",
-          description: response.data.description || "",
-          category: categoryId, // Set category as the ID
+          title: fetchedCourse.title || "",
+          description: fetchedCourse.description || "",
+          category: categoryId,
         });
       } catch (error) {
         toast.error("Error fetching course details. Please try again.");
@@ -52,18 +46,18 @@ const EditCourse = () => {
       }
     };
 
-    fetchCourse();
+    fetchData();
   }, [id]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("access_token");
-      await axios.put(
-        `http://127.0.0.1:8000/api/courses/${id}/`,
+      await api.put(
+        `/api/courses/${id}/`,
         {
           ...course,
-          category: parseInt(course.category), // Ensure category is sent as an ID (number)
+          category: course.category ? parseInt(course.category) : null,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -82,7 +76,7 @@ const EditCourse = () => {
     const { name, value } = e.target;
     setCourse((prevCourse) => ({
       ...prevCourse,
-      [name]: name === "category" ? parseInt(value) : value, // Parse category as an integer
+      [name]: value,
     }));
   };
 

@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import CourseCard from "./CourseCard";
 import EnrollmentRequestCard from "./EnrollmentRequestCard";
+import PropTypes from "prop-types";
 
 const InstructorDashboard = ({ courses, enrollmentRequests, handleApproveRequest, handleRejectRequest }) => {
   const navigate = useNavigate();
@@ -52,6 +53,21 @@ const InstructorDashboard = ({ courses, enrollmentRequests, handleApproveRequest
       )}
     </div>
   );
+};
+
+InstructorDashboard.propTypes = {
+  courses: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+    })
+  ).isRequired,
+  enrollmentRequests: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+    })
+  ).isRequired,
+  handleApproveRequest: PropTypes.func.isRequired,
+  handleRejectRequest: PropTypes.func.isRequired,
 };
 
 export default InstructorDashboard;

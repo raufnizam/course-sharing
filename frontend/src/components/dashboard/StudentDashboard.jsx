@@ -3,8 +3,9 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import CourseCard from "./CourseCard";
 import EnrollmentRequestCard from "./EnrollmentRequestCard";
+import PropTypes from "prop-types";
 
-const StudentDashboard = ({ courses, studentRequests, allCourses, handleWithdrawRequest }) => {
+const StudentDashboard = ({ courses, studentRequests, handleWithdrawRequest }) => {
   const navigate = useNavigate();
 
   // Function to handle withdrawal and show toast notifications
@@ -12,7 +13,7 @@ const StudentDashboard = ({ courses, studentRequests, allCourses, handleWithdraw
     try {
       await handleWithdrawRequest(requestId);
       toast.success("Enrollment request withdrawn successfully.");
-    } catch (error) {
+    } catch {
       toast.error("Error withdrawing enrollment request. Please try again.");
     }
   };
@@ -77,6 +78,20 @@ const StudentDashboard = ({ courses, studentRequests, allCourses, handleWithdraw
       )}
     </div>
   );
+};
+
+StudentDashboard.propTypes = {
+  courses: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+    })
+  ).isRequired,
+  studentRequests: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+    })
+  ).isRequired,
+  handleWithdrawRequest: PropTypes.func.isRequired,
 };
 
 export default StudentDashboard;

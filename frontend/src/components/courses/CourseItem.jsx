@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import PropTypes from "prop-types";
 
 const CourseItem = ({ course }) => {
   return (
@@ -23,6 +24,16 @@ const CourseItem = ({ course }) => {
       </div>
     </div>
   );
+};
+
+CourseItem.propTypes = {
+  course: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    title: PropTypes.string.isRequired,
+    description: PropTypes.string.isRequired,
+    instructor: PropTypes.string,
+    category: PropTypes.string,
+  }).isRequired,
 };
 
 export default CourseItem;

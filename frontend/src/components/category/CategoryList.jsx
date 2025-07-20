@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { Link, useNavigate } from "react-router-dom";
+import api from "../../api";
+import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -20,7 +20,7 @@ const CategoryList = () => {
       }
 
       try {
-        const response = await axios.get("http://127.0.0.1:8000/auth/profile/", {
+        const response = await api.get("/auth/profile/", {
           headers: { Authorization: `Bearer ${token}` },
         });
         
@@ -31,7 +31,7 @@ const CategoryList = () => {
           setUserRole(response.data.profile.role);
           fetchCategories();
         }
-      } catch (error) {
+      } catch {
         toast.error("Error verifying your access");
         navigate("/login");
       }
@@ -44,13 +44,13 @@ const CategoryList = () => {
   const fetchCategories = async () => {
     try {
       const token = localStorage.getItem("access_token");
-      const response = await axios.get("http://127.0.0.1:8000/api/categories/", {
+      const response = await api.get("/api/categories/", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       setCategories(response.data);
-    } catch (error) {
+    } catch {
       toast.error("Error fetching categories. Please try again.");
     } finally {
       setLoading(false);
@@ -62,14 +62,14 @@ const CategoryList = () => {
     if (window.confirm("Are you sure you want to delete this category?")) {
       try {
         const token = localStorage.getItem("access_token");
-        await axios.delete(`http://127.0.0.1:8000/api/categories/${id}/`, {
+        await api.delete(`/api/categories/${id}/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
         toast.success("Category deleted successfully!");
         setCategories(categories.filter((cat) => cat.id !== id));
-      } catch (error) {
+      } catch {
         toast.error("Error deleting category. Please try again.");
       }
     }

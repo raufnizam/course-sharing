@@ -6,70 +6,60 @@ from rest_framework import status
 from .models import Course, Lesson, Category, CourseEnrollment
 from auth_app.models import Profile
 from .serializers import CourseSerializer, LessonSerializer, CategorySerializer, CourseEnrollmentSerializer
-from .permissions import IsInstructorOrReadOnly
+from .permissions import IsInstructorOrReadOnly, ProfileExistsPermission, IsInstructorOrAdminForLesson
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, ProfileExistsPermission])
 def user_courses(request):
     user = request.user
-    try:
-        profile = user.profile  # Access the profile
-        if profile.role == "instructor":
-            courses = Course.objects.filter(instructor=user)
-        else:
-            enrollments = CourseEnrollment.objects.filter(student=user)
-            courses = [enrollment.course for enrollment in enrollments]
-        serializer = CourseSerializer(courses, many=True, context={'request': request})
-        return Response(serializer.data)
-    except Profile.DoesNotExist:
-        return Response({"error": "User profile not found."}, status=404)
+    profile = user.profile
+    if profile.role == "instructor":
+        courses = Course.objects.filter(instructor=user)
+    else:
+        enrollments = CourseEnrollment.objects.filter(student=user).select_related('course')
+        courses = [enrollment.course for enrollment in enrollments]
+    serializer = CourseSerializer(courses, many=True, context={'request': request})
     return Response(serializer.data)
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, ProfileExistsPermission])
 def check_enrollment(request, course_id):
     user = request.user
+    profile = user.profile
+    if profile.role == "instructor":
+        return Response({"error": "Instructors cannot enroll in courses."}, status=403)
+
     try:
-        profile = user.profile  # Access the profile
-        if profile.role == "instructor":
-            return Response({"error": "Instructors cannot enroll in courses."}, status=403)
+        course = Course.objects.get(id=course_id)
+    except Course.DoesNotExist:
+        return Response({"error": "Course not found."}, status=404)
 
-        try:
-            course = Course.objects.get(id=course_id)
-        except Course.DoesNotExist:
-            return Response({"error": "Course not found."}, status=404)
-
-        # Check if the user is enrolled
-        is_enrolled = CourseEnrollment.objects.filter(student=user, course=course).exists()
-        return Response({"is_enrolled": is_enrolled}, status=200)
-    except Profile.DoesNotExist:
-        return Response({"error": "User profile not found."}, status=404)
+    # Check if the user is enrolled
+    is_enrolled = CourseEnrollment.objects.filter(student=user, course=course).exists()
+    return Response({"is_enrolled": is_enrolled}, status=200)
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, ProfileExistsPermission])
 def enroll_course(request, course_id):
     user = request.user
+    profile = user.profile
+    if profile.role == "instructor":
+        return Response({"error": "Instructors cannot enroll in courses."}, status=403)
+    
     try:
-        profile = user.profile  # Access the profile
-        if profile.role == "instructor":
-            return Response({"error": "Instructors cannot enroll in courses."}, status=403)
-        
-        try:
-            course = Course.objects.get(id=course_id)
-        except Course.DoesNotExist:
-            return Response({"error": "Course not found."}, status=404)
+        course = Course.objects.get(id=course_id)
+    except Course.DoesNotExist:
+        return Response({"error": "Course not found."}, status=404)
 
-        # Check if the user is already enrolled
-        if CourseEnrollment.objects.filter(student=user, course=course).exists():
-            return Response({"error": "You are already enrolled in this course."}, status=400)
+    # Check if the user is already enrolled
+    if CourseEnrollment.objects.filter(student=user, course=course).exists():
+        return Response({"error": "You are already enrolled in this course."}, status=400)
 
-        # Enroll the student
-        enrollment = CourseEnrollment(student=user, course=course)
-        enrollment.save()
-        return Response({"message": "Successfully enrolled in the course."}, status=201)
-    except Profile.DoesNotExist:
-        return Response({"error": "User profile not found."}, status=404)
+    # Enroll the student
+    enrollment = CourseEnrollment(student=user, course=course)
+    enrollment.save()
+    return Response({"message": "Successfully enrolled in the course."}, status=201)
     
     
 @api_view(['DELETE'])
@@ -108,7 +98,7 @@ class CourseViewSet(viewsets.ModelViewSet):
 class LessonViewSet(viewsets.ModelViewSet):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsInstructorOrAdminForLesson]
     
     
     # Enrolment
@@ -121,47 +111,44 @@ from .models import CourseEnrollmentRequest
 from .serializers import CourseEnrollmentRequestSerializer
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, ProfileExistsPermission])
 def request_enrollment(request, course_id):
     user = request.user
+    profile = user.profile
+    if profile.role == "instructor":
+        return Response({"error": "Instructors cannot request enrollment."}, status=403)
+
     try:
-        profile = user.profile
-        if profile.role == "instructor":
-            return Response({"error": "Instructors cannot request enrollment."}, status=403)
+        course = Course.objects.get(id=course_id)
+    except Course.DoesNotExist:
+        return Response({"error": "Course not found."}, status=404)
 
-        try:
-            course = Course.objects.get(id=course_id)
-        except Course.DoesNotExist:
-            return Response({"error": "Course not found."}, status=404)
+    # Check if the user has already requested enrollment
+    existing_request = CourseEnrollmentRequest.objects.filter(student=user, course=course).first()
+    if existing_request:
+        if existing_request.status == "pending":
+            return Response({"error": "You have already requested enrollment in this course."}, status=400)
+        elif existing_request.status == "rejected":
+            # Update the existing request
+            existing_request.message = request.data.get('message', '')
+            existing_request.status = "pending"
+            existing_request.save()
+            return Response({"message": "Enrollment request re-submitted successfully."}, status=200)
 
-        # Check if the user has already requested enrollment
-        existing_request = CourseEnrollmentRequest.objects.filter(student=user, course=course).first()
-        if existing_request:
-            if existing_request.status == "pending":
-                return Response({"error": "You have already requested enrollment in this course."}, status=400)
-            elif existing_request.status == "rejected":
-                # Update the existing request
-                existing_request.message = request.data.get('message', '')
-                existing_request.status = "pending"
-                existing_request.save()
-                return Response({"message": "Enrollment request re-submitted successfully."}, status=200)
-
-        # Create a new enrollment request
-        enrollment_request = CourseEnrollmentRequest(
-            student=user,
-            course=course,
-            message=request.data.get('message', '')  # Optional message
-        )
-        enrollment_request.save()
-        return Response({"message": "Enrollment request submitted successfully."}, status=201)
-    except Profile.DoesNotExist:
-        return Response({"error": "User profile not found."}, status=404)
+    # Create a new enrollment request
+    enrollment_request = CourseEnrollmentRequest(
+        student=user,
+        course=course,
+        message=request.data.get('message', '')  # Optional message
+    )
+    enrollment_request.save()
+    return Response({"message": "Enrollment request submitted successfully."}, status=201)
     
     
     
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, ProfileExistsPermission])
 def approve_enrollment(request, request_id):
     user = request.user
     try:
@@ -189,7 +176,7 @@ def approve_enrollment(request, request_id):
 
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, ProfileExistsPermission])
 def reject_enrollment(request, request_id):
     user = request.user
     try:
@@ -214,83 +201,74 @@ def reject_enrollment(request, request_id):
     
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, ProfileExistsPermission])
 def list_enrollment_requests(request):
     user = request.user
-    try:
-        profile = user.profile  # Access the profile
-        if profile.role not in ["instructor", "admin"]:  # Allow both instructors and admins
-            return Response({"error": "Only instructors and admins can view enrollment requests."}, status=403)
+    profile = user.profile
+    if profile.role not in ["instructor", "admin"]:  # Allow both instructors and admins
+        return Response({"error": "Only instructors and admins can view enrollment requests."}, status=403)
 
-        # Get all pending enrollment requests
-        if profile.role == "instructor":
-            enrollment_requests = CourseEnrollmentRequest.objects.filter(course__instructor=user, status='pending')
-        else:  # Admin can view all pending requests
-            enrollment_requests = CourseEnrollmentRequest.objects.filter(status='pending')
+    # Get all pending enrollment requests
+    if profile.role == "instructor":
+        enrollment_requests = CourseEnrollmentRequest.objects.filter(course__instructor=user, status='pending').select_related('course', 'student')
+    else:  # Admin can view all pending requests
+        enrollment_requests = CourseEnrollmentRequest.objects.filter(status='pending').select_related('course', 'student')
 
-        serializer = CourseEnrollmentRequestSerializer(enrollment_requests, many=True)
-        return Response(serializer.data)
-    except Profile.DoesNotExist:
-        return Response({"error": "User profile not found."}, status=404)
+    serializer = CourseEnrollmentRequestSerializer(enrollment_requests, many=True)
+    return Response(serializer.data)
     
     
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, ProfileExistsPermission])
 def student_enrollment_requests(request):
     user = request.user
-    try:
-        profile = user.profile  # Access the profile
-        if profile.role != "student":
-            return Response({"error": "Only students can view their enrollment requests."}, status=403)
+    profile = user.profile
+    if profile.role != "student":
+        return Response({"error": "Only students can view their enrollment requests."}, status=403)
 
-        # Fetch enrollment requests made by the student
-        enrollment_requests = CourseEnrollmentRequest.objects.filter(student=user)
-        serializer = CourseEnrollmentRequestSerializer(enrollment_requests, many=True)
-        return Response(serializer.data)
-    except Profile.DoesNotExist:
-        return Response({"error": "User profile not found."}, status=404)    
+    # Fetch enrollment requests made by the student
+    enrollment_requests = CourseEnrollmentRequest.objects.filter(student=user).select_related('course', 'student')
+    serializer = CourseEnrollmentRequestSerializer(enrollment_requests, many=True)
+    return Response(serializer.data)
 
     
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, ProfileExistsPermission])
 def check_enrollment_request(request, course_id):
     user = request.user
+    profile = user.profile
+    if profile.role == "instructor":
+        return Response({"error": "Instructors cannot check enrollment requests."}, status=403)
+
     try:
-        profile = user.profile  # Access the profile
-        if profile.role == "instructor":
-            return Response({"error": "Instructors cannot check enrollment requests."}, status=403)
+        course = Course.objects.get(id=course_id)
+    except Course.DoesNotExist:
+        return Response({"error": "Course not found."}, status=404)
 
-        try:
-            course = Course.objects.get(id=course_id)
-        except Course.DoesNotExist:
-            return Response({"error": "Course not found."}, status=404)
+    # Check if the user has an enrollment request for this course
+    if profile.role == "student":
+        enrollment_request = CourseEnrollmentRequest.objects.filter(student=user, course=course).first()
+    else:  # Admin can check requests for any student
+        student_id = request.query_params.get('student_id')
+        if not student_id:
+            return Response({"error": "Student ID is required for admin requests."}, status=400)
+        enrollment_request = CourseEnrollmentRequest.objects.filter(student_id=student_id, course=course).first()
 
-        # Check if the user has an enrollment request for this course
-        if profile.role == "student":
-            enrollment_request = CourseEnrollmentRequest.objects.filter(student=user, course=course).first()
-        else:  # Admin can check requests for any student
-            student_id = request.query_params.get('student_id')
-            if not student_id:
-                return Response({"error": "Student ID is required for admin requests."}, status=400)
-            enrollment_request = CourseEnrollmentRequest.objects.filter(student_id=student_id, course=course).first()
-
-        if enrollment_request:
-            return Response({"status": enrollment_request.status}, status=200)
-        else:
-            return Response({"status": "no_request"}, status=200)
-    except Profile.DoesNotExist:
-        return Response({"error": "User profile not found."}, status=404)
+    if enrollment_request:
+        return Response({"status": enrollment_request.status}, status=200)
+    else:
+        return Response({"status": "no_request"}, status=200)
     
     
     
     
 @api_view(['DELETE'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, ProfileExistsPermission])
 def withdraw_enrollment_request(request, request_id):
     user = request.user
+    profile = user.profile
     try:
-        profile = user.profile
         enrollment_request = CourseEnrollmentRequest.objects.get(id=request_id)
 
         # Allow admins to withdraw any request
@@ -307,28 +285,25 @@ def withdraw_enrollment_request(request, request_id):
     
     
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated, ProfileExistsPermission])
 def course_enrollments(request, course_id):
     user = request.user
+    profile = user.profile
+    if profile.role != "instructor":
+        return Response({"error": "Only instructors can view course enrollments."}, status=403)
+
     try:
-        profile = user.profile
-        if profile.role != "instructor":
-            return Response({"error": "Only instructors can view course enrollments."}, status=403)
+        course = Course.objects.get(id=course_id)
+    except Course.DoesNotExist:
+        return Response({"error": "Course not found."}, status=404)
 
-        try:
-            course = Course.objects.get(id=course_id)
-        except Course.DoesNotExist:
-            return Response({"error": "Course not found."}, status=404)
+    # Verify the requesting instructor owns the course
+    if course.instructor != user:
+        return Response({"error": "You are not the instructor of this course."}, status=403)
 
-        # Verify the requesting instructor owns the course
-        if course.instructor != user:
-            return Response({"error": "You are not the instructor of this course."}, status=403)
-
-        enrollments = CourseEnrollment.objects.filter(course=course).select_related('student__profile')
-        serializer = CourseEnrollmentSerializer(enrollments, many=True)
-        return Response(serializer.data)
-    except Profile.DoesNotExist:
-        return Response({"error": "User profile not found."}, status=404)
+    enrollments = CourseEnrollment.objects.filter(course=course).select_related('student__profile')
+    serializer = CourseEnrollmentSerializer(enrollments, many=True)
+    return Response(serializer.data)
     
     
     

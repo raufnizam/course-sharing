@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import api from "../../api";
 import InstructorDashboard from "./InstructorDashboard";
 import StudentDashboard from "./StudentDashboard";
 import AdminDashboard from "./AdminDashboard";
@@ -15,7 +14,6 @@ const Dashboard = () => {
   const [enrollmentRequests, setEnrollmentRequests] = useState([]);
   const [studentRequests, setStudentRequests] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (userData.profile?.role) {
@@ -28,12 +26,12 @@ const Dashboard = () => {
       const token = localStorage.getItem("access_token");
       if (role === "instructor") {
         const [coursesResponse, requestsResponse] = await Promise.all([
-          axios.get("http://127.0.0.1:8000/api/user-courses/", {
+          api.get("/api/user-courses/", {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }),
-          axios.get("http://127.0.0.1:8000/api/list-enrollment-requests/", {
+          api.get("/api/list-enrollment-requests/", {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -43,12 +41,12 @@ const Dashboard = () => {
         setEnrollmentRequests(requestsResponse.data);
       } else if (role === "student") {
         const [enrollmentsResponse, requestsResponse] = await Promise.all([
-          axios.get("http://127.0.0.1:8000/api/user-courses/", {
+          api.get("/api/user-courses/", {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }),
-          axios.get("http://127.0.0.1:8000/api/student-enrollment-requests/", {
+          api.get("/api/student-enrollment-requests/", {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -57,7 +55,7 @@ const Dashboard = () => {
         setCourses(enrollmentsResponse.data);
         setStudentRequests(requestsResponse.data);
         if (enrollmentsResponse.data.length === 0) {
-          const allCoursesResponse = await axios.get("http://127.0.0.1:8000/api/courses/", {
+          const allCoursesResponse = await api.get("/api/courses/", {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -66,17 +64,17 @@ const Dashboard = () => {
         }
       } else if (role === "admin") {
         const [usersResponse, coursesResponse, requestsResponse] = await Promise.all([
-          axios.get("http://127.0.0.1:8000/auth/admin/users/", {
+          api.get("/auth/admin/users/", {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }),
-          axios.get("http://127.0.0.1:8000/api/courses/", {
+          api.get("/api/courses/", {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }),
-          axios.get("http://127.0.0.1:8000/api/list-enrollment-requests/", {
+          api.get("/api/list-enrollment-requests/", {
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -98,8 +96,8 @@ const Dashboard = () => {
   const handleApproveRequest = async (requestId) => {
     try {
       const token = localStorage.getItem("access_token");
-      await axios.post(
-        `http://127.0.0.1:8000/api/approve-enrollment/${requestId}/`,
+      await api.post(
+        `/api/approve-enrollment/${requestId}/`,
         {},
         {
           headers: {
@@ -108,7 +106,7 @@ const Dashboard = () => {
         }
       );
       toast.success("Enrollment request approved successfully.");
-      const response = await axios.get("http://127.0.0.1:8000/api/list-enrollment-requests/", {
+      const response = await api.get("/api/list-enrollment-requests/", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -123,8 +121,8 @@ const Dashboard = () => {
   const handleRejectRequest = async (requestId) => {
     try {
       const token = localStorage.getItem("access_token");
-      await axios.post(
-        `http://127.0.0.1:8000/api/reject-enrollment/${requestId}/`,
+      await api.post(
+        `/api/reject-enrollment/${requestId}/`,
         {},
         {
           headers: {
@@ -133,7 +131,7 @@ const Dashboard = () => {
         }
       );
       toast.success("Enrollment request rejected successfully.");
-      const response = await axios.get("http://127.0.0.1:8000/api/list-enrollment-requests/", {
+      const response = await api.get("/api/list-enrollment-requests/", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -148,13 +146,13 @@ const Dashboard = () => {
   const handleDeleteUser = async (userId) => {
     try {
       const token = localStorage.getItem("access_token");
-      await axios.delete(`http://127.0.0.1:8000/auth/admin/users/${userId}/`, {
+      await api.delete(`/auth/admin/users/${userId}/`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       toast.success("User deleted successfully.");
-      const response = await axios.get("http://127.0.0.1:8000/auth/admin/users/", {
+      const response = await api.get("/auth/admin/users/", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -163,6 +161,27 @@ const Dashboard = () => {
     } catch (error) {
       toast.error("Error deleting user. Please try again.");
       console.error("Error deleting user:", error);
+    }
+  };
+
+  const handleWithdrawRequest = async (requestId) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      await api.delete(`/api/withdraw-enrollment-request/${requestId}/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      toast.success("Enrollment request withdrawn successfully.");
+      const response = await api.get("/api/student-enrollment-requests/", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setStudentRequests(response.data);
+    } catch (error) {
+      toast.error("Error withdrawing enrollment request. Please try again.");
+      console.error("Error withdrawing request:", error);
     }
   };
 
@@ -204,6 +223,7 @@ const Dashboard = () => {
           courses={courses}
           studentRequests={studentRequests}
           allCourses={allCourses}
+          handleWithdrawRequest={handleWithdrawRequest}
         />
       )}
 

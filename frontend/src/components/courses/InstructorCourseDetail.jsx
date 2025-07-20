@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import axios from "axios";
+import api from "../../api";
+import PropTypes from "prop-types";
 
 const InstructorCourseDetail = ({ course, handleDeleteCourse, user }) => {
   const navigate = useNavigate();
@@ -24,8 +25,8 @@ const InstructorCourseDetail = ({ course, handleDeleteCourse, user }) => {
         }
 
         // 1. Fetch enrollments which includes student IDs
-        const enrollmentsRes = await axios.get(
-          `http://127.0.0.1:8000/api/course-enrollments/${course.id}/`,
+        const enrollmentsRes = await api.get(
+          `/api/course-enrollments/${course.id}/`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -40,8 +41,8 @@ const InstructorCourseDetail = ({ course, handleDeleteCourse, user }) => {
         }
 
         // 3. Fetch student details including usernames
-        const studentsRes = await axios.get(
-          `http://127.0.0.1:8000/auth/users/?ids=${studentIds.join(",")}`,
+        const studentsRes = await api.get(
+          `/auth/users/?ids=${studentIds.join(",")}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -298,6 +299,32 @@ const InstructorCourseDetail = ({ course, handleDeleteCourse, user }) => {
       </div>
     </div>
   );
+};
+
+InstructorCourseDetail.propTypes = {
+  course: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    title: PropTypes.string.isRequired,
+    description: PropTypes.string.isRequired,
+    instructor: PropTypes.string,
+    category: PropTypes.string,
+    created_at: PropTypes.string.isRequired,
+    updated_at: PropTypes.string.isRequired,
+    lessons: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        title: PropTypes.string.isRequired,
+        description: PropTypes.string.isRequired,
+        videos: PropTypes.array,
+        pdfs: PropTypes.array,
+      })
+    ),
+  }).isRequired,
+  handleDeleteCourse: PropTypes.func.isRequired,
+  user: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    username: PropTypes.string.isRequired,
+  }),
 };
 
 export default InstructorCourseDetail;

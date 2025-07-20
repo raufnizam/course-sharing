@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../api";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from "react-router-dom";
@@ -69,7 +69,7 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post("http://127.0.0.1:8000/auth/register/", {
+      await api.post("/auth/register/", {
         username: formData.username,
         email: formData.email,
         password: formData.password,

@@ -20,6 +20,7 @@ import NotFound from "./components/NotFound"; // Add a 404 Not Found component
 import Profile from "./components/profile/Profile";
 import ProfileEdit from "./components/profile/ProfileEdit";
 import UserProfile from "./components/profile/UserProfile";
+import PrivateRoute from "./components/PrivateRoute";
 
 const App = () => {
   const isAuthenticated = !!localStorage.getItem("access_token");
@@ -52,64 +53,22 @@ const App = () => {
           />
 
           {/* Protected Routes */}
-          <Route
-            path="/dashboard"
-            element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />}
-          />
-          <Route
-  path="/users/:username"
-  element={isAuthenticated ? <UserProfile /> : <Navigate to="/login" />}
-/>
-          <Route
-            path="/profile"
-            element={isAuthenticated ? <Profile /> : <Navigate to="/login" />}
-            
-          />
-          <Route
-            path="/profile/edit"
-            element={isAuthenticated ? <ProfileEdit /> : <Navigate to="/login" />}
-            
-          />
-          <Route
-            path="/create-course"
-            element={isAuthenticated ? <CreateCourse /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/courses"
-            element={isAuthenticated ? <CourseList /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/courses/:id"
-            element={isAuthenticated ? <CourseDetail /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/courses/:id/edit"
-            element={isAuthenticated ? <EditCourse /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/lessons/:id"
-            element={isAuthenticated ? <LessonDetail /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/lessons/edit/:id"
-            element={isAuthenticated ? <LessonEdit /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/courses/:id/add-lesson"
-            element={isAuthenticated ? <AddLesson /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/categories"
-            element={isAuthenticated ? <CategoryList /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/create-category"
-            element={isAuthenticated ? <CreateCategory /> : <Navigate to="/login" />}
-          />
-          <Route
-            path="/edit-category/:id"
-            element={isAuthenticated ? <EditCategory /> : <Navigate to="/login" />}
-          />
+          <Route element={<PrivateRoute />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/users/:username" element={<UserProfile />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/edit" element={<ProfileEdit />} />
+            <Route path="/create-course" element={<CreateCourse />} />
+            <Route path="/courses" element={<CourseList />} />
+            <Route path="/courses/:id" element={<CourseDetail />} />
+            <Route path="/courses/:id/edit" element={<EditCourse />} />
+            <Route path="/lessons/:id" element={<LessonDetail />} />
+            <Route path="/lessons/edit/:id" element={<LessonEdit />} />
+            <Route path="/courses/:id/add-lesson" element={<AddLesson />} />
+            <Route path="/categories" element={<CategoryList />} />
+            <Route path="/create-category" element={<CreateCategory />} />
+            <Route path="/edit-category/:id" element={<EditCategory />} />
+          </Route>
 
           {/* Fallback Route (404 Not Found) */}
           <Route path="*" element={<NotFound />} />

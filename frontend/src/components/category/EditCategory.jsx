@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../api";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -27,8 +27,8 @@ const EditCategory = () => {
 
       try {
         // Verify admin status
-        const profileResponse = await axios.get(
-          "http://127.0.0.1:8000/auth/profile/",
+        const profileResponse = await api.get(
+          "/auth/profile/",
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -43,8 +43,8 @@ const EditCategory = () => {
         setIsAdmin(true);
 
         // Fetch category data
-        const categoryResponse = await axios.get(
-          `http://127.0.0.1:8000/api/categories/${id}/`,
+        const categoryResponse = await api.get(
+          `/api/categories/${id}/`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -87,8 +87,8 @@ const EditCategory = () => {
 
     try {
       const token = localStorage.getItem("access_token");
-      await axios.put(
-        `http://127.0.0.1:8000/api/categories/${id}/`,
+      await api.put(
+        `/api/categories/${id}/`,
         formData,
         {
           headers: {

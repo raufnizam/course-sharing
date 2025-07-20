@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../api";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -22,7 +22,7 @@ const CreateCategory = () => {
       }
 
       try {
-        const response = await axios.get("http://127.0.0.1:8000/auth/profile/", {
+        const response = await api.get("/auth/profile/", {
           headers: { Authorization: `Bearer ${token}` },
         });
         
@@ -32,7 +32,7 @@ const CreateCategory = () => {
         } else {
           setIsAdmin(true);
         }
-      } catch (error) {
+      } catch {
         toast.error("Error verifying permissions");
         navigate("/login");
       } finally {
@@ -53,8 +53,8 @@ const CreateCategory = () => {
 
     try {
       const token = localStorage.getItem("access_token");
-      await axios.post(
-        "http://127.0.0.1:8000/api/categories/",
+      await api.post(
+        "/api/categories/",
         { name, description },
         {
           headers: {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../api";
 
 const useUserData = () => {
   const [userData, setUserData] = useState({});
@@ -10,13 +10,13 @@ const useUserData = () => {
     const fetchUserData = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        const response = await axios.get("http://127.0.0.1:8000/auth/profile/", {
+        const response = await api.get("/auth/profile/", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
         setUserData(response.data);
-      } catch (error) {
+      } catch {
         setError("Error fetching user data. Please log in again.");
       } finally {
         setLoading(false);

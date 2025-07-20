@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../api";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -14,7 +14,6 @@ const AddLesson = () => {
   const [videoFile, setVideoFile] = useState(null);
   const [pdfFile, setPdfFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [userRole, setUserRole] = useState("");
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   // Verify user role on component mount
@@ -28,12 +27,11 @@ const AddLesson = () => {
       }
 
       try {
-        const response = await axios.get("http://127.0.0.1:8000/auth/profile/", {
+        const response = await api.get("/auth/profile/", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         const role = response.data.profile?.role;
-        setUserRole(role);
 
         // Only allow admin and instructor
         if (role === "admin" || role === "instructor") {
@@ -42,7 +40,7 @@ const AddLesson = () => {
           toast.error("Only administrators and instructors can add lessons");
           navigate(`/courses/${id}`);
         }
-      } catch (error) {
+      } catch {
         toast.error("Error verifying permissions");
         navigate("/login");
       }
@@ -84,7 +82,7 @@ const AddLesson = () => {
       setIsLoading(true);
       const token = localStorage.getItem("access_token");
       
-      await axios.post("http://127.0.0.1:8000/api/lessons/", formDataToSend, {
+      await api.post("/api/lessons/", formDataToSend, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",

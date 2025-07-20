@@ -114,9 +114,25 @@ Contributions are welcome! Follow these steps:
    ```
 5. Open a Pull Request.
 
+## Production Considerations
+
+### Database
+For production environments, it is highly recommended to switch from SQLite to a more robust database like PostgreSQL. You will need to install the `psycopg2-binary` package and update the `DATABASES` setting in `course_sharing_webApp/settings.py`.
+
+### Environment Variables
+To enhance security, the `SECRET_KEY` and `DEBUG` settings are configured to use environment variables. Before deploying to production, ensure you set the following variables:
+- `DJANGO_SECRET_KEY`: A strong, randomly generated secret key.
+- `DJANGO_DEBUG`: Set to `False` to disable debug mode.
+
+### Token Storage
+The current implementation stores JWTs in `localStorage`, which is vulnerable to XSS attacks. For enhanced security, it is recommended to store tokens in memory or use `HttpOnly` cookies.
+
+### State Management
+For more complex applications, consider using a state management library like Redux or Zustand to manage global state, such as user information, more efficiently.
+
 ## License
 This project is licensed under the MIT License.
 
 ## Contact
-For any inquiries or suggestions, feel free to reach out to the repository owner.
+For any inquiries or suggestions, feel a free to reach out to the repository owner.
 

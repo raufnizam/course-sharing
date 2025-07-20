@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../api";
 import { useParams, useNavigate } from "react-router-dom";
 
 const LessonDetail = () => {
@@ -7,24 +7,29 @@ const LessonDetail = () => {
   const navigate = useNavigate(); // For navigation
   const [lesson, setLesson] = useState(null);
   const [message, setMessage] = useState("");
+  const [userRole, setUserRole] = useState("");
 
   // Fetch lesson details
   useEffect(() => {
-    const fetchLesson = async () => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem("access_token");
-        const response = await axios.get(`http://127.0.0.1:8000/api/lessons/${id}/`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setLesson(response.data);
-      } catch (error) {
+        const [lessonResponse, profileResponse] = await Promise.all([
+          api.get(`/api/lessons/${id}/`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          api.get("/auth/profile/", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+        setLesson(lessonResponse.data);
+        setUserRole(profileResponse.data.profile?.role || "");
+      } catch {
         setMessage("Error fetching lesson details. Please try again.");
       }
     };
 
-    fetchLesson();
+    fetchData();
   }, [id]);
 
   // Delete lesson function
@@ -34,7 +39,7 @@ const LessonDetail = () => {
 
     try {
       const token = localStorage.getItem("access_token");
-      await axios.delete(`http://127.0.0.1:8000/api/lessons/${id}/`, {
+      await api.delete(`/api/lessons/${id}/`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -42,7 +47,7 @@ const LessonDetail = () => {
 
       setMessage("Lesson deleted successfully.");
       setTimeout(() => navigate("/"), 2000); // Redirect after 2 seconds
-    } catch (error) {
+    } catch {
       setMessage("Error deleting lesson. Please try again.");
     }
   };
@@ -66,21 +71,25 @@ const LessonDetail = () => {
         Back
       </button>
 
-      {/* Edit Button */}
-      <button
-        onClick={() => navigate(`/lessons/edit/${id}`)} // Navigate to edit page
-        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 mb-4 ml-2"
-      >
-        Edit
-      </button>
+      {(userRole === "instructor" || userRole === "admin") && (
+        <>
+          {/* Edit Button */}
+          <button
+            onClick={() => navigate(`/lessons/edit/${id}`)} // Navigate to edit page
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 mb-4 ml-2"
+          >
+            Edit
+          </button>
 
-      {/* Delete Button */}
-      <button
-        onClick={handleDelete}
-        className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 mb-4 ml-2"
-      >
-        Delete
-      </button>
+          {/* Delete Button */}
+          <button
+            onClick={handleDelete}
+            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 mb-4 ml-2"
+          >
+            Delete
+          </button>
+        </>
+      )}
 
       {/* Lesson Information */}
       {console.log(lesson)}

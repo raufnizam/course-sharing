@@ -68,19 +68,9 @@ def user_profile(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, IsAdminUser])  # Only admins can access
 def list_all_users(request):
-    users = User.objects.all()
-    user_data = []
-    for user in users:
-        profile = user.profile
-        user_data.append({
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "role": profile.role,
-            "is_staff": user.is_staff,
-            "is_active": user.is_active,
-        })
-    return Response(user_data)  # Ensure this returns an array
+    users = User.objects.all().select_related('profile')
+    serializer = UserSerializer(users, many=True)
+    return Response(serializer.data)
 
 # Admin: Delete a User
 @api_view(['DELETE'])
@@ -109,67 +99,13 @@ def get_users_by_ids(request):
         return Response({"error": "Invalid user IDs"}, status=status.HTTP_400_BAD_REQUEST)
     
     users = User.objects.filter(id__in=user_ids).select_related('profile')
-    
-    user_data = []
-    for user in users:
-        profile = getattr(user, 'profile', None)
-        user_data.append({
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "profile": {
-                "id": profile.id if profile else None,
-                "full_name": profile.full_name if profile else None,
-                "role": profile.role if profile else None
-            }
-        })
-    
-    return Response(user_data)
+    serializer = UserSerializer(users, many=True)
+    return Response(serializer.data)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_user_detail(request, user_id):
     """Get detailed user information"""
-    user = get_object_or_404(User, id=user_id)
-    profile = getattr(user, 'profile', None)
-    
-    data = {
-        "id": user.id,
-        "username": user.username,
-        "email": user.email,
-        "profile": {
-            "id": profile.id if profile else None,
-            "full_name": profile.full_name if profile else None,
-            "role": profile.role if profile else None,
-            "bio": profile.bio if profile else None,
-            # Add other profile fields as needed
-        }
-    }
-    return Response(data)
-    
-    
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def user_detail(request, username):
-    try:
-        user = User.objects.get(username=username)
-        profile = getattr(user, 'profile', None)
-        
-        data = {
-            "id": user.id,
-            "username": user.username,
-            "email": user.email,
-            "profile": {
-                "id": profile.id if profile else None,
-                "full_name": getattr(profile, 'full_name', None),
-                "role": profile.role if profile else None,
-                "bio": getattr(profile, 'bio', None),
-                "phone_number": getattr(profile, 'phone_number', None),
-                "profile_image": profile.profile_image.url if profile and profile.profile_image else None,
-            }
-        }
-        return Response(data)
-    except User.DoesNotExist:
-        return Response({"error": "User not found"}, status=404)    
-
-    
+    user = get_object_or_404(User.objects.select_related('profile'), id=user_id)
+    serializer = UserSerializer(user)
+    return Response(serializer.data)

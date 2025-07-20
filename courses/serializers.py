@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Course, Lesson, Category, CourseEnrollment, CourseEnrollmentRequest
+from django.contrib.auth.models import User
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -19,6 +20,12 @@ class LessonSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'order': {'required': False},  # Make the order field optional
         }
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['video_file'] = representation.get('video_file', None)
+        representation['pdf_file'] = representation.get('pdf_file', None)
+        return representation
 
     def get_video_file_name(self, obj):
         """Return the filename of the uploaded video."""
@@ -66,10 +73,18 @@ class CourseSerializer(serializers.ModelSerializer):
     
     
     
+class SimpleStudentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username']
+
 class CourseEnrollmentRequestSerializer(serializers.ModelSerializer):
+    course = CourseSerializer(read_only=True)
+    student = SimpleStudentSerializer(read_only=True)
+
     class Meta:
         model = CourseEnrollmentRequest
         fields = ['id', 'student', 'course', 'message', 'status', 'requested_at']
-        read_only_fields = ['student', 'status', 'requested_at']
+        read_only_fields = ['student', 'course', 'status', 'requested_at']
     
     

@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import PropTypes from "prop-types";
 
 const StudentCourseDetail = ({ course, isEnrolled, enrollmentRequestStatus, handleRequestEnrollment, handleWithdraw, requestMessage, setRequestMessage }) => {
   const navigate = useNavigate();
@@ -120,6 +121,45 @@ const StudentCourseDetail = ({ course, isEnrolled, enrollmentRequestStatus, hand
       )}
     </div>
   );
+};
+
+StudentCourseDetail.propTypes = {
+  course: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    title: PropTypes.string.isRequired,
+    description: PropTypes.string.isRequired,
+    instructor: PropTypes.string,
+    category: PropTypes.string,
+    created_at: PropTypes.string.isRequired,
+    updated_at: PropTypes.string.isRequired,
+    lessons: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.number.isRequired,
+        title: PropTypes.string.isRequired,
+        description: PropTypes.string.isRequired,
+        videos: PropTypes.arrayOf(
+          PropTypes.shape({
+            id: PropTypes.number.isRequired,
+            title: PropTypes.string.isRequired,
+            video_file: PropTypes.string.isRequired,
+          })
+        ),
+        pdfs: PropTypes.arrayOf(
+          PropTypes.shape({
+            id: PropTypes.number.isRequired,
+            title: PropTypes.string.isRequired,
+            pdf_file: PropTypes.string.isRequired,
+          })
+        ),
+      })
+    ),
+  }).isRequired,
+  isEnrolled: PropTypes.bool.isRequired,
+  enrollmentRequestStatus: PropTypes.string,
+  handleRequestEnrollment: PropTypes.func.isRequired,
+  handleWithdraw: PropTypes.func.isRequired,
+  requestMessage: PropTypes.string.isRequired,
+  setRequestMessage: PropTypes.func.isRequired,
 };
 
 export default StudentCourseDetail;
