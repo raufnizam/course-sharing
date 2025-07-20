@@ -38,28 +38,24 @@ Ensure you have the following installed:
    ```sh
    git clone https://github.com/raufnizam/course-sharing.git
    ```
-2. Navigate to the backend directory:
-   ```sh
-   cd course-sharing/backend
-   ```
-3. Create a virtual environment:
+2. Create a virtual environment:
    ```sh
    python -m venv venv
    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
    ```
-4. Install dependencies:
+3. Install dependencies:
    ```sh
    pip install -r requirements.txt
    ```
-5. Apply database migrations:
+4. Apply database migrations:
    ```sh
    python manage.py migrate
    ```
-6. Create a superuser (optional):
+5. Create a superuser (optional):
    ```sh
    python manage.py createsuperuser
    ```
-7. Run the development server:
+6. Run the development server:
    ```sh
    python manage.py runserver
    ```
